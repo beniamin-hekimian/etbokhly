@@ -1,4 +1,4 @@
-import { prisma } from "./lib/prisma";
+/* import { prisma } from "./lib/prisma";
 
 async function main() {
   // Example: Fetch all records from a table
@@ -16,3 +16,15 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
+ */ 
+ 
+import express from 'express'
+import userRoute from './routes/userRoute'
+//import { prisma } from "./lib/prisma"
+const PORT = process.env.PORT || 3000;
+
+const app= express();
+app.use(express.json());
+app.use('/user',userRoute)
+
+app.listen(PORT,()=>{console.log("app working");})
