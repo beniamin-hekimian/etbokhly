@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  user_id       Int     @id @default(autoincrement())
+  full_name     String
+  email         String  @unique
+  password      String
+  phone         String?
+  role          String
+  profile_image String?
+  bio           String?
+
+  profile Profile?
+
+  meals Meal[] @relation("Offers")
+
+  likes    Like[]
+  comments Comment[]
+  orders   Order[]
+
+  following Follow[] @relation("Follower")
+  followers Follow[] @relation("Following")
+}
+
+model Profile {
+  profile_id Int     @id @default(autoincrement())
+  city       String?
+  country    String?
+  location   String?
+  about_me   String?
+
+  user_id Int  @unique
+  user    User @relation(fields: [user_id], references: [user_id])
+}
+
+model Meal {
+  meal_id     Int     @id @default(autoincrement())
+  title       String
+  photo       String?
+  quantity    Int
+  status      String
+  calories    Int?
+  price       Float
+  ingredients String
+  content     String
+
+  user_id Int
+  user    User @relation("Offers", fields: [user_id], references: [user_id])
+
+  likes    Like[]
+  comments Comment[]
+  orders   Order[]
+
+  tags MealTag[]
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  meals MealTag[]
+}
+
+model MealTag {
+  meal_id Int
+  tag_id  Int
+
+  meal Meal @relation(fields: [meal_id], references: [meal_id])
+  tag  Tag  @relation(fields: [tag_id], references: [id])
+
+  @@id([meal_id, tag_id])
+}
+
+model Like {
+  user_id Int
+  meal_id Int
+
+  user User @relation(fields: [user_id], references: [user_id])
+  meal Meal @relation(fields: [meal_id], references: [meal_id])
+
+  @@id([user_id, meal_id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  user_id Int
+  meal_id Int
+
+  user User @relation(fields: [user_id], references: [user_id])
+  meal Meal @relation(fields: [meal_id], references: [meal_id])
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  user_id Int
+  meal_id Int
+
+  user User @relation(fields: [user_id], references: [user_id])
+  meal Meal @relation(fields: [meal_id], references: [meal_id])
+}
+
+model Follow {
+  followerId  Int
+  followingId Int
+
+  follower  User @relation("Follower", fields: [followerId], references: [user_id])
+  following User @relation("Following", fields: [followingId], references: [user_id])
+
+  @@id([followerId, followingId])
+}
