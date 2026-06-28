@@ -33,17 +33,25 @@ export const signup=catchAsync(async(req,res,next)=>{
       data:{user:user}
     })
   })
+  
 export const login =catchAsync(async (req,res,next)=>{
    const {email,password}=  req.body
    if(!email || !password)
      return next(new appError('please provide email and password!',400));
   const user = await prisma.user.findUnique({where:{email:email}})
+  if (!user)
+    {
+        
+        return next(new appError(`User not found`, 404));
+    }
   const checkPassword= await bcrypt.compare(password,user.password_hash);
-  if(!email||!checkPassword)
-    return next(new appError('Incorrect email or password!', 401));
+  if (!checkPassword) {
+    return next(new appError('incorrect password.Please try again!.', 401));
+  }
    const token=signToken(user.id);
     res.status(201).json({
       status:'success',
       token
     })
 })
+   
