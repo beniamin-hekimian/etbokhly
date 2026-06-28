@@ -1,14 +1,14 @@
 import { prisma } from "../lib/prisma"
 import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
-export const getAllUsers = catchAsync(async (req, res, next) => {
+export const getAllUsers=catchAsync(async (req, res, next) => {
    const users= await prisma.user.findMany();
   res.status(200).json({
     status: 'success',
     data: users
   });
 });
-export const getUser =catchAsync(async (req, res, next) => {
+export const getUser=catchAsync(async (req, res, next) => {
   const {id}= req.params;
   if(!id)
     return next(new appError("please provide id!"),404)
@@ -20,7 +20,7 @@ export const getUser =catchAsync(async (req, res, next) => {
     data: user
   });
 });
-export const updateUser= catchAsync(async (req, res, next) => {
+export const updateUser=catchAsync(async (req, res, next) => {
   const {id}= req.params;
   const updatedData= req.body;
   if(!id || !updatedData)
@@ -35,7 +35,7 @@ export const updateUser= catchAsync(async (req, res, next) => {
     data: user
   });
 });
-export const deleteUser=  catchAsync(async (req, res, next) => {
+export const deleteUser=catchAsync(async (req, res, next) => {
 const {id}= req.params;
  if(!id)
     return next(new appError("please provide id!"),404)
