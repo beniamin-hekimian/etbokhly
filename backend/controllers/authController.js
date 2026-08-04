@@ -5,9 +5,6 @@ import bcrypt, { compare } from "bcryptjs";
 import jwt from "jsonwebtoken"
 
 import { promisify } from "node:util";
-const signToken =id=>{
-return jwt.sign({id},process.env.JWT_SECRET,{expiresIn: process.env.JWT_EXPIRES_IN})
-
 const signToken = id =>
 {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN })
@@ -64,7 +61,25 @@ export const login = catchAsync(async (req, res, next) =>
     token
   })
 })
-
+export const restrictToAdmin = (req, res, next) =>
+{
+    if (req.user?.role !== 'ADMIN')
+        return res.status(403).json({ error: 'Admins only' });
+    next();
+};
+const changedPasswordAfter = (user, JWTTimestamp) =>
+{
+    if (user?.passwordChangedAt)
+    {
+        const changedTimestamp = parseInt(
+            user.passwordChangedAt.getTime() / 1000,
+            10
+        );
+        return JWTTimestamp < changedTimestamp;
+    }
+    // False means NOT changed
+    return false;
+};
 export const protect = catchAsync(async(req,res,next)=>{
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -73,19 +88,31 @@ export const protect = catchAsync(async(req,res,next)=>{
   
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
+      new appError('You are not logged in! Please log in to get access.', 401)
     );
   }
   const decoded = await promisify(jwt.verify)(token,process.env.JWT_SECRET)
-    const currentUser = await User.findById(decoded.id);
+    const currentUser = await prisma.user.findUnique({
+    where: {
+      id: decoded.id,
+    },
+  });
   if (!currentUser) {
     return next(
-      new AppError(
+      new appError(
         'The user belonging to this token does no longer exist.',
         401
       )
     );
   }
   ////changed password
+ if (changedPasswordAfter(currentUser, decoded.iat))
+    {
+        return next(
+            new appError('User recently changed password! Please log in again.', 401)
+        );
+    }
+  req.user=currentUser;
+
   next();
 })
