@@ -40,7 +40,15 @@ export const signup = catchAsync(async (req, res, next) =>
     data: { user: user }
   })*/
 })
+//cookie
+const cookieOptions={
+  expires:new Date(Date.now()+process.env.JWT_COOKIE_EXP *24*60*60*1000)
+    ,
+    httpOnly:true
+}
 const createSendToken=(user,statusCode,res)=>{ 
+
+//  res.cookie('jwt',token,cookieOptions)
   const token = signToken(user.id);
   res.status(statusCode).json({
     status: 'success',
