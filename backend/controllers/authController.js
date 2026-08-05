@@ -3,7 +3,8 @@ import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
 import bcrypt, { compare } from "bcryptjs";
 import jwt from "jsonwebtoken"
-
+import crypto from 'crypto'
+import sendEmail from './../utils/email.js';
 import { promisify } from "node:util";
 const signToken = id =>
 {
@@ -31,14 +32,21 @@ export const signup = catchAsync(async (req, res, next) =>
       password_hash: passwordHashed,
     },
   })
-  const token = signToken(user.id);
+  createSendToken(user,201,res);
+  /*const token = signToken(user.id);
   res.status(201).json({
     status: 'success',
     token,
     data: { user: user }
-  })
+  })*/
 })
-
+const createSendToken=(user,statusCode,res)=>{ 
+  const token = signToken(user.id);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: { user }
+  })}
 export const login = catchAsync(async (req, res, next) =>
 {
   const { email, password } = req.body
@@ -55,11 +63,12 @@ export const login = catchAsync(async (req, res, next) =>
   {
     return next(new appError('incorrect password.Please try again!.', 401));
   }
-  const token = signToken(user.id);
+  createSendToken(user,200,res);
+  /*const token = signToken(user.id);
   res.status(201).json({
     status: 'success',
     token
-  })
+  })*/
 })
 export const restrictToAdmin = (req, res, next) =>
 {
@@ -116,3 +125,150 @@ export const protect = catchAsync(async(req,res,next)=>{
 
   next();
 })
+
+export const createPasswordResetToken = async (user) => {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  const passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+  await prisma.user.update({
+    where: {
+      email: user.email,
+    },
+    data: {
+      passwordResetToken,
+      passwordResetExpires,
+    },
+  });
+//console.log({resetToken}, passwordResetToken);
+  return resetToken;
+};
+export const forgetPassword=catchAsync(async(req,res,next)=>{
+   console.log("forgetPassword called");
+  const user = await prisma.user.findUnique({where: {
+      email: req.body.email,
+    }})
+    if (!user){
+      return next(new appError("There is no user with email address.",404))
+    
+    }
+  const resetToken=await createPasswordResetToken(user)
+ 
+   const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/user/resetpassword/${resetToken}`;
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+try {console.log("before sendEmail");
+    await sendEmail({
+      email: user.email,
+      subject: 'Your password reset token (valid for 10 min)',
+      message
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!'
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    return next(
+      new appError('There was an error sending the email. Try again later!'),
+      500
+    );
+  }
+}) 
+export const resetPassword = catchAsync(async (req, res, next) => {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await prisma.user.findFirst({
+    where: {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: {
+        gt: new Date(),
+      },
+    },
+  });
+ console.log("after user");
+  if (!user) {
+    return next(new appError("Token is invalid or has expired.", 400));
+  }
+
+  if (req.body.password !== req.body.passwordConfirm) {
+    return next(new appError("Passwords do not match", 400));
+  }
+console.log("after check");
+  const hashedPassword = await bcrypt.hash(req.body.password, 12);
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      password_hash: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      passwordChangedAt: new Date(),
+    },
+  });
+createSendToken(user,200,res);
+ /* const token = signToken(updatedUser.id);
+
+  res.status(200).json({
+    status: "success",
+    token,
+    data: {
+      user: updatedUser,
+    },
+  });*/
+});
+
+/*
+export const updatePassowrd=catchAsync(async(req,res,next)=>{
+const user=await prisma.user.findUnique({where:{}})
+
+})*/
+export const updatePassword = catchAsync(async (req, res, next) =>
+{
+    const { passwordCurrent, password, confirmPassword } = req.body;
+    if (!passwordCurrent || !password || !confirmPassword)
+    {
+        return next(new appError('passwordCurrent password confirmPassword must exist', 400));
+    }
+    if (password !== confirmPassword)
+        return next(new appError('password and confirmPassword not equal', 400));
+    if (password.length < 7)
+        return next(new appError('password is too short', 400));
+
+    const user = await prisma.user.findUnique({
+        where: { id: req.user.id }
+    });
+    if (!user)
+        return next(new appError('User not found', 404));
+
+    const isMatch = await bcrypt.compare(passwordCurrent, user.password_hash);
+    if (!isMatch)
+    {
+        return next(new appError('Your current password is wrong.', 401));
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 16);
+    const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+            password_hash: hashedPassword,
+            passwordChangedAt: new Date()
+        }
+    });
+
+    createSendToken(updatedUser, 200, res);
+});
