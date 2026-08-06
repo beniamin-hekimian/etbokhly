@@ -78,9 +78,16 @@ export const login = catchAsync(async (req, res, next) =>
     token
   })*/
 })
+
 export const restrictToAdmin = (req, res, next) =>
 {
     if (req.user?.role !== 'ADMIN')
+        return res.status(403).json({ error: 'Admins only' });
+    next();
+};
+export const restrictToChef = (req, res, next) =>
+{
+    if (req.user?.role !== 'CHEF')
         return res.status(403).json({ error: 'Admins only' });
     next();
 };
@@ -133,6 +140,15 @@ export const protect = catchAsync(async(req,res,next)=>{
 
   next();
 })
+
+export const logout = (req, res) =>
+{
+    res.cookie('jwt', 'loggedout', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    });
+    res.status(200).json({ status: 'success' });
+}
 
 export const createPasswordResetToken = async (user) => {
   const resetToken = crypto.randomBytes(32).toString("hex");

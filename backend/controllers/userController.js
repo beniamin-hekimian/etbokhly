@@ -1,6 +1,12 @@
 import { prisma } from "../lib/prisma"
 import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
+
+export const getMe = (req, res, next) =>
+{
+    req.params.id = req.user.id;
+    next();
+};
 export const getAllUsers = catchAsync(async (req, res, next) =>
 {
   const users = await prisma.user.findMany();
