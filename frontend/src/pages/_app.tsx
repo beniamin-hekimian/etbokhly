@@ -2,6 +2,8 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { Amatic_SC, Merriweather, Open_Sans } from "next/font/google";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -24,14 +26,18 @@ const merriweather = Merriweather({
 });
 
 export default function App({ Component, pageProps }: AppProps) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
-    <main
-      className={`${openSans.className} ${openSans.variable} ${amaticaSC.variable} ${merriweather.variable}`}
-    >
-      <Head>
-        <title>Etbokhly - Homemade Food Selling Web App</title>
-      </Head>
-      <Component {...pageProps} />
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <main
+        className={`${openSans.className} ${openSans.variable} ${amaticaSC.variable} ${merriweather.variable}`}
+      >
+        <Head>
+          <title>Etbokhly - Homemade Food Selling Web App</title>
+        </Head>
+        <Component {...pageProps} />
+      </main>
+    </QueryClientProvider>
   );
 }
