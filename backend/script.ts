@@ -32,7 +32,7 @@ app.use('/user',userRoute)
 //app.use('/order',orderRoute);
 //app.use('/api/v1/users', userRoute);
 //app.use('/api/v1/tags', tagRoute);
-//app.use('/api/v1/meals', mealRoute);
+app.use('/meal', mealRoute);
 
 app.listen(PORT, () =>
 {

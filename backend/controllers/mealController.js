@@ -43,7 +43,7 @@ export const createMeal = catchAsync(async (req, res, next) =>
     const { title, photo, quantity, calories, price, ingredients, content } = req.body;
     const userId = getUserId(req.body);
 
-    if (!title || price == null || !ingredients || !content || !userId)
+    if (!title || price == 0.0|| !ingredients || !content || !userId)
         return next(new appError("please provide title, price, ingredients, content and user id!", 400))
 
     const foundedUser = await prisma.user.findUnique({ where: { id: userId } })
