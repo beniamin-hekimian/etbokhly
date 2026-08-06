@@ -1,7 +1,6 @@
 import express from 'express'
 import * as authController from '../controllers/authController'
 import * as userController from '../controllers/userController'
-import * as profileController from '../controllers/profileController'
 const router = express.Router()
 
 //auth rooutes
