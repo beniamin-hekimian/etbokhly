@@ -20,12 +20,19 @@ main()
  
 import express from 'express'
 import userRoute from './routes/userRoute'
+import tagRoute from './routes/tagRoute.js'
+import mealRoute from './routes/mealRoute.js'
+//import orderRoute from './routes/orderRoute.js'
 //import { prisma } from "./lib/prisma"
 const PORT = process.env.PORT || 3000;
 
 const app= express();
 app.use(express.json());
 app.use('/user',userRoute)
+//app.use('/order',orderRoute);
+//app.use('/api/v1/users', userRoute);
+//app.use('/api/v1/tags', tagRoute);
+//app.use('/api/v1/meals', mealRoute);
 
 app.listen(PORT, () =>
 {
