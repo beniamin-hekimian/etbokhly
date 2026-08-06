@@ -27,8 +27,8 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
+    "dev": "npx tsx script.ts",
+    "start": "npx tsx script.ts"
   },
   "keywords": [],
   "author": "",
