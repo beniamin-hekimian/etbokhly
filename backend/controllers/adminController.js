@@ -2,7 +2,7 @@ import { prisma } from "../lib/prisma"
 import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
 
-
+/*
 export const getChefRequests = catchAsync(async (req, res) => {
   const requests = await prisma.user.findMany({
     where: {
@@ -19,6 +19,44 @@ export const getChefRequests = catchAsync(async (req, res) => {
 
   res.status(200).json({
     status: "success",
+    data: requests,
+  });
+});*/
+export const getChefRequests = catchAsync(async (req, res) => {
+  const requests = await prisma.user.findMany({
+    where: {
+      chefRequestStatus: {
+        in: ["PENDING", "APPROVED", "REJECTED"],
+      },
+    },
+    select: {
+      id: true,
+      full_name: true,
+      email: true,
+      phone: true,
+      profile_image: true,
+      bio: true,
+      role: true,
+      chefRequestStatus: true,
+      chefRequestRejectReason: true,
+      createdAt: true,
+
+      profile: {
+        select: {
+          location: true,
+          about_me: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    results: requests.length,
     data: requests,
   });
 });

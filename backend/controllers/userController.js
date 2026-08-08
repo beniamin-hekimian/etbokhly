@@ -142,6 +142,7 @@ export const getChefRequestStatus = catchAsync(async (req, res) => {
     url: updatedUser.profile_image,
   });
 });
+/*
 export const requestChef = catchAsync(async (req, res, next) => {
   await prisma.user.update({
     where: { id: req.user.id },
@@ -155,7 +156,7 @@ export const requestChef = catchAsync(async (req, res, next) => {
     status: "success",
     message: "Your request has been sent.",
   });
-});
+});*/
 export const getChefRequestStatus = catchAsync(async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
@@ -168,6 +169,40 @@ export const getChefRequestStatus = catchAsync(async (req, res) => {
 
   res.status(200).json({
     status: "success",
+    data: user,
+  });
+});
+export const requestChef = catchAsync(async (req, res, next) => {
+  const user = await prisma.user.update({
+    where: {
+      id: req.user.id,
+    },
+    data: {
+      chefRequestStatus: "PENDING",
+      chefRequestRejectReason: null,
+    },
+    select: {
+      id: true,
+      full_name: true,
+      email: true,
+      phone: true,
+      profile_image: true,
+      bio: true,
+      role: true,
+      chefRequestStatus: true,
+
+      profile: {
+        select: {
+          location: true,
+          about_me: true,
+        },
+      },
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Your request has been sent.",
     data: user,
   });
 });
