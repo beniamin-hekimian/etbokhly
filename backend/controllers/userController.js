@@ -96,7 +96,37 @@ export const uploadAvatar = catchAsync(async (req, res, next) => {
       resource_type: "image",
     }
   );
+  /*
+export const requestChef = catchAsync(async (req, res, next) => {
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: {
+      chefRequestStatus: "PENDING",
+      chefRequestRejectReason: null,
+    },
+  });
 
+  res.status(200).json({
+    status: "success",
+    message: "Your request has been sent.",
+  });
+});*/
+/*
+export const getChefRequestStatus = catchAsync(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user_id },
+    select: {
+      role: true,
+      chefRequestStatus: true,
+      chefRequestRejectReason: true,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: user,
+  });
+});*/
   const updatedUser = await prisma.user.update({
     where: {
       id: req.user.id,
@@ -110,5 +140,34 @@ export const uploadAvatar = catchAsync(async (req, res, next) => {
     status: "success",
     message: "Avatar uploaded successfully.",
     url: updatedUser.profile_image,
+  });
+});
+export const requestChef = catchAsync(async (req, res, next) => {
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: {
+      chefRequestStatus: "PENDING",
+      chefRequestRejectReason: null,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Your request has been sent.",
+  });
+});
+export const getChefRequestStatus = catchAsync(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: {
+      role: true,
+      chefRequestStatus: true,
+      chefRequestRejectReason: true,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: user,
   });
 });

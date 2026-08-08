@@ -13,13 +13,16 @@ router.patch('/resetpassword/:token',authController.resetPassword);
 router.use(authController.protect);
 //Profile
 router.get('/profile',authController.protect,userController.getMe,userController.getUser);
-
+//userchef request
+router.post("/requestchef",userController.requestChef);
+router.get("/chefrequeststatus",userController.getChefRequestStatus)
 //User
 router.patch('/updatepassword',authController.protect,authController.updatePassword)
 router.get('/logout',authController.protect,authController.logout);
 router.get('/me', authController.protect,userController.getMe, userController.getUser);
 router.route('/:id').get(userController.getUser)
 .patch(userController.updateUser)
+
 //router.route('/uploadimage').post(userController.uploadAvatar);
 router.post(
   "/avatar",
