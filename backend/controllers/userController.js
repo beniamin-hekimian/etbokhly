@@ -1,7 +1,8 @@
 import { prisma } from "../lib/prisma"
 import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
-
+import multer from "multer";
+import cloudinary from "./../utils/cloudinary.js";
 export const getMe = (req, res, next) =>
 {
     req.params.id = req.user.id;
@@ -60,3 +61,54 @@ export const deleteUser = catchAsync(async (req, res, next) =>
     data: deletedUser,
   });
 })
+///upload image
+const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed."), false);
+  }
+};
+
+export const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
+
+export const uploadAvatar = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({
+      message: "Image file is required.",
+    });
+  }
+
+  const uploadResult = await cloudinary.uploader.upload(
+    `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+    {
+      folder: "Etbokhly/avatars",
+      public_id: `user_${req.user.id}_${Date.now()}`,
+      overwrite: true,
+      resource_type: "image",
+    }
+  );
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id: req.user.id,
+    },
+    data: {
+      profile_image: uploadResult.secure_url,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Avatar uploaded successfully.",
+    url: updatedUser.profile_image,
+  });
+});

@@ -20,6 +20,13 @@ router.get('/logout',authController.protect,authController.logout);
 router.get('/me', authController.protect,userController.getMe, userController.getUser);
 router.route('/:id').get(userController.getUser)
 .patch(userController.updateUser)
+//router.route('/uploadimage').post(userController.uploadAvatar);
+router.post(
+  "/avatar",
+  authController.protect,
+  userController.upload.single("file"),
+  userController.uploadAvatar
+);
 //only admins
 router.use(authController.restrictToAdmin);
 router.get('/',userController.getAllUsers)
