@@ -15,8 +15,20 @@ enum OrderStatus {
   cancelled
 }
 
+enum ChefRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MealRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum Role {
-  USER
+  CUSTOMER
   CHEF
   ADMIN
 }
@@ -34,15 +46,16 @@ model User {
   email         String @unique @db.VarChar(255)
   password_hash String @db.VarChar(255)
 
-  role Role @default(USER)
+  role Role @default(CUSTOMER)
 
-  phone         String?
-  profile_image String?
-  bio           String?
-
-  passwordChangedAt    DateTime?
-  passwordResetToken   String?
-  passwordResetExpires DateTime?
+  phone                   String?
+  profile_image           String?
+  bio                     String?
+  chefRequestStatus       ChefRequestStatus?
+  chefRequestRejectReason String?
+  passwordChangedAt       DateTime?
+  passwordResetToken      String?
+  passwordResetExpires    DateTime?
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
@@ -85,10 +98,11 @@ model Meal {
   photo    String?
   quantity Int     @default(1)
 
-  status MealStatus @default(AVAILABLE)
-
-  calories Int?
-  price    Decimal @db.Decimal(10, 2)
+  status                  MealStatus         @default(AVAILABLE)
+  mealRequestStatus       MealRequestStatus?
+  mealRequestRejectReason String?
+  calories                Int?
+  price                   Decimal            @db.Decimal(10, 2)
 
   ingredients String
   content     String
