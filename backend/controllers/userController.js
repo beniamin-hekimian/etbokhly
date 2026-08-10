@@ -172,7 +172,7 @@ export const getChefRequestStatus = catchAsync(async (req, res) => {
     data: user,
   });
 });
-
+/*
 export const requestChef = catchAsync(async (req, res, next) => {
   const user = await prisma.user.update({
     where: {
@@ -204,6 +204,52 @@ export const requestChef = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Your request has been sent.",
+    data: user,
+  });
+});
+*/
+export const requestChef = catchAsync(async (req, res, next) => {
+  const { bio, phone, location } = req.body;
+
+  if (!bio || !phone || !location) {
+    return next(
+      new appError(
+        "Bio, phone and location are required to submit a Chef request",
+        400
+      )
+    );
+  }
+
+  const user = await prisma.user.update({
+    where: {
+      id: req.user.id,
+    },
+
+    data: {
+      bio,
+      phone,
+      location,
+      chefRequestStatus: "PENDING",
+      chefRequestRejectReason: null,
+    },
+
+    select: {
+      id: true,
+      full_name: true,
+      email: true,
+      phone: true,
+      profile_image: true,
+      bio: true,
+      location: true,
+      role: true,
+      chefRequestStatus: true,
+      chefRequestRejectReason: true,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Your Chef request has been sent.",
     data: user,
   });
 });
