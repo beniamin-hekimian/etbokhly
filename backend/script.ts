@@ -34,7 +34,6 @@ app.use('/admin',adminRoute)
 app.use('/meal',mealRoute);
 //app.use('/api/v1/users', userRoute);
 //app.use('/api/v1/tags', tagRoute);
-app.use('/meal', mealRoute);
 
 app.listen(PORT, () =>
 {

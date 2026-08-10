@@ -56,9 +56,9 @@ model User {
   passwordChangedAt       DateTime?
   passwordResetToken      String?
   passwordResetExpires    DateTime?
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  location                String?
+  createdAt               DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime           @updatedAt @db.Timestamptz(6)
 
   profile Profile?
 
@@ -76,7 +76,6 @@ model User {
 
 model Profile {
   id       String  @id @default(uuid()) @db.Uuid
-  location String?
   about_me String?
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)

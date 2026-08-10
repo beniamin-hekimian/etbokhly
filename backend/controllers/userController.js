@@ -172,6 +172,7 @@ export const getChefRequestStatus = catchAsync(async (req, res) => {
     data: user,
   });
 });
+
 export const requestChef = catchAsync(async (req, res, next) => {
   const user = await prisma.user.update({
     where: {
