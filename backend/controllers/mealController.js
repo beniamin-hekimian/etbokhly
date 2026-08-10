@@ -1,127 +1,354 @@
-import { prisma } from "../lib/prisma"
-import catchAsync from './../utils/catchAsync.js'
-import appError from './../utils/appError.js';
+import { prisma } from "../lib/prisma.js";
+import catchAsync from "../utils/catchAsync.js";
+import appError from "../utils/appError.js";
+import multer from "multer";
+import cloudinary from "../utils/cloudinary.js";
 
-const getUserId = body => body.user_id ?? body.userId;
 
-export const getAllMeals = catchAsync(async (req, res, next) =>
-{
-    const meals = await prisma.meal.findMany({
-        select: {
-            id: true,
-            title: true,
-            photo: true,
-            price: true,
-            content: true,
-            createdAt: true,
-            updatedAt: true,
-            user_id: true,
-            tags: true,
-        },
-    });
-    res.status(200).json({
-        status: 'success',
-        data: meals
-    });
+// =========================
+// Multer Upload Configuration
+// =========================
+
+const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed."), false);
+  }
+};
+
+export const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
 });
 
-export const getMeal = catchAsync(async (req, res, next) =>
-{
-    const { id } = req.params;
-    if (!id)
-        return next(new appError("please provide id!", 404))
-    const meal = await prisma.meal.findUnique({
-        where: { id: id },
-        select: {
-            id: true,
-            title: true,
-            photo: true,
-            price: true,
-            content: true,
-            createdAt: true,
-            updatedAt: true,
-            user_id: true,
-            tags: true,
-        },
-    })
-    if (!meal)
-        return next(new appError("Meal not found!", 404))
-    res.status(200).json({
-        status: 'success',
-        data: meal
-    });
+
+// =========================
+// Get All Meals
+// =========================
+
+export const getAllMeals = catchAsync(async (req, res, next) => {
+  const meals = await prisma.meal.findMany({
+    select: {
+      id: true,
+      title: true,
+      photo: true,
+      price: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+      user_id: true,
+      tags: true,
+      mealRequestStatus: true,
+      mealRequestRejectReason: true,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: meals,
+  });
 });
 
-export const createMeal = catchAsync(async (req, res, next) =>
-{
-    const { title, photo, price, content } = req.body;
-    const userId = getUserId(req.body);
-    if (!title || !price || !content || !userId)
-        return next(new appError("please provide title, price, content and user id!", 400))
 
-    const foundedUser = await prisma.user.findUnique({ where: { id: userId } })
-    if (!foundedUser)
-        return next(new appError("User not found!", 404))
+// =========================
+// Get Single Meal
+// =========================
 
-    const meal = await prisma.meal.create({
-        data: {
-            title,
-            photo,
-            price,
-            content,
-            user_id: userId,
-        }
-    })
+export const getMeal = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
 
-    res.status(201).json({
-        status: 'success',
-        data: meal
-    });
+  if (!id) {
+    return next(new appError("Please provide id!", 400));
+  }
+
+  const meal = await prisma.meal.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      title: true,
+      photo: true,
+      price: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+      user_id: true,
+      tags: true,
+      mealRequestStatus: true,
+      mealRequestRejectReason: true,
+    },
+  });
+
+  if (!meal) {
+    return next(new appError("Meal not found!", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: meal,
+  });
 });
 
-export const updateMeal = catchAsync(async (req, res, next) =>
-{
-    const { id } = req.params;
-    const updatedData = { ...req.body };
-    const userId = getUserId(updatedData);
 
-    if (!id || !updatedData)
-        return next(new appError("please provide id and data!", 400))
-    const founded = await prisma.meal.findUnique({ where: { id: id } })
-    if (!founded)
-        return next(new appError("Meal not found!", 404))
+// =========================
+// Create Meal
+// =========================
 
-    if (userId)
+export const createMeal = catchAsync(async (req, res, next) => {
+  const { title, photo, price, content } = req.body;
+
+  if (!title || !price || !content || !photo) {
+    return next(
+      new appError(
+        "Please provide title, photo, price and content!",
+        400
+      )
+    );
+  }
+
+  const meal = await prisma.meal.create({
+    data: {
+      title,
+      photo,
+      price,
+      content,
+      user_id: req.user.id,
+    },
+  });
+
+  res.status(201).json({
+    status: "success",
+    data: meal,
+  });
+});
+
+
+// =========================
+// Update Meal
+// =========================
+
+export const updateMeal = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const updatedData = { ...req.body };
+
+  if (!id) {
+    return next(new appError("Please provide id!", 400));
+  }
+
+  const founded = await prisma.meal.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!founded) {
+    return next(new appError("Meal not found!", 404));
+  }
+
+  const meal = await prisma.meal.update({
+    where: {
+      id,
+    },
+    data: updatedData,
+  });
+
+  res.status(200).json({
+    status: "Meal was updated",
+    data: meal,
+  });
+});
+
+
+// =========================
+// Delete Meal
+// =========================
+
+export const deleteMeal = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return next(new appError("Please provide id!", 400));
+  }
+
+  const founded = await prisma.meal.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!founded) {
+    return next(new appError("Meal not found!", 404));
+  }
+
+  const deletedMeal = await prisma.meal.delete({
+    where: {
+      id,
+    },
+  });
+
+  res.status(200).json({
+    status: "Meal was deleted",
+    data: deletedMeal,
+  });
+});
+
+
+// =========================
+// Upload Meal Photo
+// =========================
+
+export const uploadMealPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({
+      message: "Image file is required.",
+    });
+  }
+
+  const uploadResult = await cloudinary.uploader.upload(
+    `data:${req.file.mimetype};base64,${req.file.buffer.toString(
+      "base64"
+    )}`,
     {
-        const foundedUser = await prisma.user.findUnique({ where: { id: userId } })
-        if (!foundedUser)
-            return next(new appError("User not found!", 404))
-        updatedData.user_id = userId;
-        delete updatedData.userId;
+      folder: "Etbokhly/meals",
+      public_id: `meal_${req.user.id}_${Date.now()}`,
+      overwrite: true,
+      resource_type: "image",
     }
+  );
 
-    const meal = await prisma.meal.update({
-        where: { id: id },
-        data: updatedData
-    })
-
-    res.status(200).json({
-        status: 'Meal was updated',
-        data: meal
-    });
+  res.status(200).json({
+    status: "success",
+    message: "Meal image uploaded successfully.",
+    url: uploadResult.secure_url,
+  });
 });
 
-export const deleteMeal = catchAsync(async (req, res, next) =>
-{
-    const { id } = req.params;
-    if (!id)
-        return next(new appError("please provide id!", 400))
-    const founded = await prisma.meal.findUnique({ where: { id: id } })
-    if (!founded)
-        return next(new appError("Meal not found!", 404))
-    const deletedMeal = await prisma.meal.delete({ where: { id: id } })
-    res.status(200).json({
-        status: 'Meal was deleted',
-        data: deletedMeal,
+export const requestMeal = catchAsync(async (req, res, next) => {
+  const {
+    title,
+    price,
+    content,
+    photo,
+    tagIds
+  } = req.body;
+
+  if (!title || !price || !content || !photo) {
+    return next(
+      new appError(
+        "Title, price, photo and content are required to submit a Meal request",
+        400
+      )
+    );
+  }
+
+  if (tagIds && !Array.isArray(tagIds)) {
+    return next(
+      new appError("tagIds must be an array", 400)
+    );
+  }
+
+  const meal = await prisma.meal.create({
+    data: {
+      title,
+      photo,
+      price,
+      content,
+
+      user_id: req.user.id,
+
+      mealRequestStatus: "PENDING",
+      mealRequestRejectReason: null,
+
+      tags: tagIds?.length
+        ? {
+            create: tagIds.map((tagId) => ({
+              tag: {
+                connect: {
+                  id: tagId,
+                },
+              },
+            })),
+          }
+        : undefined,
+    },
+
+    select: {
+      id: true,
+      title: true,
+      photo: true,
+      price: true,
+      content: true,
+
+      user_id: true,
+
+      
+      user: {
+        select: {
+          full_name: true,
+          email: true,
+          phone: true,
+          profile_image: true,
+        },
+      },
+
+      mealRequestStatus: true,
+      mealRequestRejectReason: true,
+
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Your Meal request has been sent.",
+    data: meal,
+  });
+});
+// =========================
+// Get Meal Request Status
+// =========================
+
+export const getMealRequestStatus = catchAsync(
+  async (req, res, next) => {
+    const meals = await prisma.meal.findMany({
+      where: {
+        user_id: req.user.id,
+      },
+
+      select: {
+        id: true,
+        title: true,
+        photo: true,
+        price: true,
+        content: true,
+        mealRequestStatus: true,
+        mealRequestRejectReason: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
     });
-})
+
+    res.status(200).json({
+      status: "success",
+      data: meals,
+    });
+  }
+);
