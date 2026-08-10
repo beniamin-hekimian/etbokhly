@@ -1,13 +1,13 @@
 import express from 'express'
 import * as tagController from '../controllers/tagController.js'
+import * as authController from '../controllers/authController'
 const router = express.Router()
-
+router.use(authController.protect);
 router.route('/')
     .get(tagController.getAllTags)
-    .post(tagController.createTag)
-
+    //only admins
+router.use(authController.restrictToAdmin)
 router.route('/:id')
-    .get(tagController.getTag)
     .patch(tagController.updateTag)
     .delete(tagController.deleteTag)
 
