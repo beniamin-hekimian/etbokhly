@@ -40,10 +40,9 @@ export const getMeal = catchAsync(async (req, res, next) =>
 
 export const createMeal = catchAsync(async (req, res, next) =>
 {
-    const { title, photo, quantity, calories, price, content } = req.body;
+    const { title, photo, price, content } = req.body;
     const userId = getUserId(req.body);
-
-    if (!title || price == 0.0 || !content || !userId)
+    if (!title || !price || !content || !userId)
         return next(new appError("please provide title, price, content and user id!", 400))
 
     const foundedUser = await prisma.user.findUnique({ where: { id: userId } })
@@ -55,8 +54,6 @@ export const createMeal = catchAsync(async (req, res, next) =>
             title,
             photo,
             price,
-            quantity,
-            calories,
             content,
             user_id: userId,
         }
