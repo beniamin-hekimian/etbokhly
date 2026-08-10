@@ -1,11 +1,7 @@
 
 import express from "express";
 
-import {
-  addTagToMeal,
-  removeTagFromMeal,
-  getMealTags,
-} from "../controllers/mealTagController.js";
+import {addTagToMeal,removeTagFromMeal,getMealTags,} from "../controllers/mealTagController.js";
 
 import * as authController from "../controllers/authController.js";
 

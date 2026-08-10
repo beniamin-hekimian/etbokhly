@@ -4,7 +4,8 @@ import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/appError.js";
 
 // Add tag to meal
-export const addTagToMeal = catchAsync(async (req, res, next) => {
+export const addTagToMeal = catchAsync(async (req, res, next) =>
+{
   const { mealId, tagId } = req.params;
 
   // Check meal exists
@@ -12,7 +13,8 @@ export const addTagToMeal = catchAsync(async (req, res, next) => {
     where: { id: mealId },
   });
 
-  if (!meal) {
+  if (!meal)
+  {
     return next(new AppError("Meal not found", 404));
   }
 
@@ -21,7 +23,8 @@ export const addTagToMeal = catchAsync(async (req, res, next) => {
     where: { id: tagId },
   });
 
-  if (!tag) {
+  if (!tag)
+  {
     return next(new AppError("Tag not found", 404));
   }
 
@@ -35,7 +38,8 @@ export const addTagToMeal = catchAsync(async (req, res, next) => {
     },
   });
 
-  if (existingMealTag) {
+  if (existingMealTag)
+  {
     return next(new AppError("Tag is already assigned to this meal", 400));
   }
 
@@ -59,7 +63,8 @@ export const addTagToMeal = catchAsync(async (req, res, next) => {
 });
 
 // Remove tag from meal
-export const removeTagFromMeal = catchAsync(async (req, res, next) => {
+export const removeTagFromMeal = catchAsync(async (req, res, next) =>
+{
   const { mealId, tagId } = req.params;
 
   const existingMealTag = await prisma.mealTag.findUnique({
@@ -71,7 +76,8 @@ export const removeTagFromMeal = catchAsync(async (req, res, next) => {
     },
   });
 
-  if (!existingMealTag) {
+  if (!existingMealTag)
+  {
     return next(new AppError("Tag is not assigned to this meal", 404));
   }
 
@@ -91,14 +97,16 @@ export const removeTagFromMeal = catchAsync(async (req, res, next) => {
 });
 
 // Get all tags of a meal
-export const getMealTags = catchAsync(async (req, res, next) => {
+export const getMealTags = catchAsync(async (req, res, next) =>
+{
   const { mealId } = req.params;
 
   const meal = await prisma.meal.findUnique({
     where: { id: mealId },
   });
 
-  if (!meal) {
+  if (!meal)
+  {
     return next(new AppError("Meal not found", 404));
   }
 
