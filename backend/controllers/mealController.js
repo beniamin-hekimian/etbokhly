@@ -7,8 +7,15 @@ const getUserId = body => body.user_id ?? body.userId;
 export const getAllMeals = catchAsync(async (req, res, next) =>
 {
     const meals = await prisma.meal.findMany({
-        include: {
-            user: true,
+        select: {
+            id: true,
+            title: true,
+            photo: true,
+            price: true,
+            content: true,
+            createdAt: true,
+            updatedAt: true,
+            user_id: true,
             tags: true,
         },
     });
@@ -25,8 +32,15 @@ export const getMeal = catchAsync(async (req, res, next) =>
         return next(new appError("please provide id!", 404))
     const meal = await prisma.meal.findUnique({
         where: { id: id },
-        include: {
-            user: true,
+        select: {
+            id: true,
+            title: true,
+            photo: true,
+            price: true,
+            content: true,
+            createdAt: true,
+            updatedAt: true,
+            user_id: true,
             tags: true,
         },
     })
