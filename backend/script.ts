@@ -31,7 +31,7 @@ const app= express();
 app.use(express.json());
 app.use('/user',userRoute)
 app.use('/admin',adminRoute)
-//app.use('/order',orderRoute);
+app.use('/meal',mealRoute);
 //app.use('/api/v1/users', userRoute);
 //app.use('/api/v1/tags', tagRoute);
 app.use('/meal', mealRoute);

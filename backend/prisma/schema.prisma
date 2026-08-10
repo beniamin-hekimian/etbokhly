@@ -75,10 +75,7 @@ model User {
 }
 
 model Profile {
-  id String @id @default(uuid()) @db.Uuid
-
-  city     String?
-  country  String?
+  id       String  @id @default(uuid()) @db.Uuid
   location String?
   about_me String?
 
@@ -94,18 +91,12 @@ model Profile {
 model Meal {
   id String @id @default(uuid()) @db.Uuid
 
-  title    String
-  photo    String?
-  quantity Int     @default(1)
-
-  status                  MealStatus         @default(AVAILABLE)
+  title                   String
+  photo                   String?
   mealRequestStatus       MealRequestStatus?
   mealRequestRejectReason String?
-  calories                Int?
   price                   Decimal            @db.Decimal(10, 2)
-
-  ingredients String
-  content     String
+  content                 String
 
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
@@ -118,8 +109,7 @@ model Meal {
   tags       MealTag[]
   orderItems OrderItem[]
 
-  @@index([status])
-  @@index([user_id, status])
+  @@index([user_id])
   @@index([createdAt])
   @@map("meals")
 }
