@@ -40,10 +40,9 @@ export const getChefRequests = catchAsync(async (req, res) => {
       chefRequestStatus: true,
       chefRequestRejectReason: true,
       createdAt: true,
-
+      location:true,
       profile: {
         select: {
-          location: true,
           about_me: true,
         },
       },
