@@ -146,6 +146,7 @@ export const getMeal = catchAsync(async (req, res, next) => {
 // Update Meal
 // =========================
 
+/*
 export const updateMeal = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const updatedData = { ...req.body };
@@ -173,6 +174,101 @@ export const updateMeal = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "Meal was updated",
+    data: meal,
+  });
+});*/
+export const updateMeal = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const {
+    tagIds,
+    ...updatedData
+  } = req.body;
+
+  if (!id) {
+    return next(new appError("Please provide id!", 400));
+  }
+
+  const founded = await prisma.meal.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!founded) {
+    return next(new appError("Meal not found!", 404));
+  }
+
+  const meal = await prisma.$transaction(async (tx) => {
+
+    // Update meal data
+    const updatedMeal = await tx.meal.update({
+      where: {
+        id,
+      },
+      data: updatedData,
+    });
+
+    
+    if (tagIds !== undefined) {
+
+     
+      await tx.mealTag.deleteMany({
+        where: {
+          meal_id: id,
+        },
+      });
+
+      
+      if (tagIds.length > 0) {
+        await tx.mealTag.createMany({
+          data: tagIds.map((tagId) => ({
+            meal_id: id,
+            tag_id: tagId,
+          })),
+        });
+      }
+    }
+
+   
+    return await tx.meal.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        title: true,
+        photo: true,
+        price: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+
+        user: {
+          select: {
+            id: true,
+            full_name: true,
+            profile_image: true,
+          },
+        },
+
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Meal was updated successfully",
     data: meal,
   });
 });

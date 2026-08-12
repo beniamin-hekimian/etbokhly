@@ -15,7 +15,7 @@ router.use(protect);
 
 router.use(restrictToChef);
 // Get all meals
-router.route("/").get(mealController.getAllMeals);
+//router.route("/").get(mealController.getAllMeals);
 
 
 // Upload meal photo
@@ -24,7 +24,7 @@ router.post(  "/uploadphoto",mealController.upload.single("photo"),mealControlle
 
 // Submit meal request
 router.post("/createmeal",mealController.requestMeal);
-
+router.patch('/:id',mealController.updateMeal)
 router.delete('/:id',mealController.deleteMeal)
 // Get meal request status
 router.get(
