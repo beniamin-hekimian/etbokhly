@@ -31,12 +31,13 @@ import {
 } from "../controllers/authController.js";
 
 const router = express.Router();
-
+router.route("/").get(mealController.getAllMeals);
+router
+  .route("/:id")
+  .get(mealController.getMeal)
 router.use(protect);
 
 router.use(restrictToChef);
-
-
 // Get all meals
 router.route("/").get(mealController.getAllMeals);
 
@@ -56,8 +57,5 @@ router.get(
 );
 
 // Meal by ID
-router
-  .route("/:id")
-  .get(mealController.getMeal)
 
 export default router;

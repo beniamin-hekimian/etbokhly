@@ -84,7 +84,7 @@ export const getMeal = catchAsync(async (req, res, next) => {
       tags: true,
       mealRequestStatus: true,
       mealRequestRejectReason: true,
-    },
+    }, where:{ mealRequestStatus:"APPROVED"}
   });
 
   if (!meal) {
