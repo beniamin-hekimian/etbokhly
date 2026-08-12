@@ -114,7 +114,7 @@ export const getMeal = catchAsync(async (req, res, next) => {
     where: {
       id,
     },
-    select: {
+       select: {
       id: true,
       title: true,
       photo: true,
@@ -122,8 +122,29 @@ export const getMeal = catchAsync(async (req, res, next) => {
       content: true,
       createdAt: true,
       updatedAt: true,
-      user_id: true,
-      tags: true,
+
+      user: {
+        select: {
+          id: true,
+          full_name: true,
+          profile_image: true,
+          location:true,
+          phone:true,
+          email:true
+        },
+      },
+
+      tags: {
+        select: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+
       mealRequestStatus: true,
       mealRequestRejectReason: true,
     },
