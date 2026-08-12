@@ -31,7 +31,7 @@ export const upload = multer({
 // =========================
 // Get All Meals
 // =========================
-
+/*
 export const getAllMeals = catchAsync(async (req, res, next) => {
   const meals = await prisma.meal.findMany({
     select: {
@@ -46,6 +46,51 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
       tags: true,
       mealRequestStatus: true,
       mealRequestRejectReason: true,
+    },where:{mealRequestStatus:'APPROVED'}
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: meals,
+  });
+});
+*/
+export const getAllMeals = catchAsync(async (req, res, next) => {
+  const meals = await prisma.meal.findMany({
+    where: {
+      mealRequestStatus: "APPROVED",
+    },
+
+    select: {
+      id: true,
+      title: true,
+      photo: true,
+      price: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+
+      user: {
+        select: {
+          id: true,
+          full_name: true,
+          profile_image: true,
+        },
+      },
+
+      tags: {
+        select: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+
+      mealRequestStatus: true,
+      mealRequestRejectReason: true,
     },
   });
 
@@ -54,8 +99,6 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
     data: meals,
   });
 });
-
-
 // =========================
 // Get Single Meal
 // =========================
