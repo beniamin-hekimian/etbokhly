@@ -10,13 +10,13 @@ import {
 
 const router = express.Router();
 router.route("/").get(mealController.getAllMeals);
-//router  .route("/:id").get(mealController.getMeal)
+router  .route("/:id").get(mealController.getMeal)
+/*
 router.use(protect);
 
 router.use(restrictToChef);
 // Get all meals
 //router.route("/").get(mealController.getAllMeals);
-
 
 // Upload meal photo
 router.post(  "/uploadphoto",mealController.upload.single("photo"),mealController.uploadMealPhoto);
@@ -32,6 +32,6 @@ router.get(
   mealController.getMealRequestStatus
 );
 
-// Meal by ID
+// Meal by ID*/
 
 export default router;

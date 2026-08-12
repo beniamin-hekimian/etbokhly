@@ -177,6 +177,7 @@ export const updateMeal = catchAsync(async (req, res, next) => {
     data: meal,
   });
 });*/
+
 export const updateMeal = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
@@ -429,7 +430,7 @@ export const requestMeal = catchAsync(async (req, res, next) => {
 // =========================
 // Get Meal Request Status
 // =========================
-
+/*
 export const getMealRequestStatus = catchAsync(
   async (req, res, next) => {
     const meals = await prisma.meal.findMany({
@@ -460,3 +461,4 @@ export const getMealRequestStatus = catchAsync(
     });
   }
 );
+*/
