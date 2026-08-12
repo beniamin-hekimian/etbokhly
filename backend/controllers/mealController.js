@@ -47,6 +47,7 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
       mealRequestStatus: true,
       mealRequestRejectReason: true,
     },
+    where:{ mealRequestStatus:"APPROVED"}
   });
 
   res.status(200).json({
@@ -96,38 +97,6 @@ export const getMeal = catchAsync(async (req, res, next) => {
   });
 });
 
-
-// =========================
-// Create Meal
-// =========================
-
-export const createMeal = catchAsync(async (req, res, next) => {
-  const { title, photo, price, content } = req.body;
-
-  if (!title || !price || !content || !photo) {
-    return next(
-      new appError(
-        "Please provide title, photo, price and content!",
-        400
-      )
-    );
-  }
-
-  const meal = await prisma.meal.create({
-    data: {
-      title,
-      photo,
-      price,
-      content,
-      user_id: req.user.id,
-    },
-  });
-
-  res.status(201).json({
-    status: "success",
-    data: meal,
-  });
-});
 
 
 // =========================

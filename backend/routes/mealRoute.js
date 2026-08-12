@@ -48,19 +48,16 @@ router.post(  "/uploadphoto",mealController.upload.single("photo"),mealControlle
 // Submit meal request
 router.post("/createmeal",mealController.requestMeal);
 
-
+router.delete('/:id',mealController.deleteMeal)
 // Get meal request status
 router.get(
   "/getcreatemealstatus",
   mealController.getMealRequestStatus
 );
 
-
 // Meal by ID
 router
   .route("/:id")
   .get(mealController.getMeal)
-  .patch(mealController.updateMeal)
-  .delete(mealController.deleteMeal);
 
 export default router;
