@@ -8,7 +8,30 @@ const getOrderScope = (req) =>
 export const getAllOrders = catchAsync(async (req, res, next) =>
 {
     const orders = await prisma.order.findMany({
-        where: getOrderScope(req),
+        where: {
+            ...getOrderScope(req),
+            status: {
+                not: null,
+            },
+        },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json({
+        status: 'success',
+        results: orders.length,
+        data: orders,
+    });
+});
+
+export const getAllCartOrders = catchAsync(async (req, res, next) =>
+{
+    const orders = await prisma.order.findMany({
+        where: {
+            ...getOrderScope(req),
+            status: null,
+        },
         include: { items: true },
         orderBy: { createdAt: 'desc' },
     });
@@ -93,6 +116,7 @@ export const getOrder = catchAsync(async (req, res, next) =>
 export const createOrder = catchAsync(async (req, res, next) =>
 {
     const { items } = req.body;
+    const isCartOrder = Boolean(req.body.cartOrder ?? req.body.isCartOrder ?? req.body.draftOrder);
 
     if (!Array.isArray(items) || items.length === 0)
         return next(new appError('Please provide at least one order item.', 400));
@@ -133,16 +157,61 @@ export const createOrder = catchAsync(async (req, res, next) =>
         };
     });
 
-    const order = await prisma.order.create({
-        data: {
-            userId: req.user.id,
-            total: Number(total.toFixed(2)),
-            items: {
-                create: orderItemsData,
+    const totalValue = Number(total.toFixed(2));
+
+    let order;
+
+    if (isCartOrder)
+    {
+        const existingCartOrder = await prisma.order.findFirst({
+            where: {
+                userId: req.user.id,
+                status: null,
             },
-        },
-        include: { items: true },
-    });
+        });
+
+        if (existingCartOrder)
+        {
+            order = await prisma.order.update({
+                where: { id: existingCartOrder.id },
+                data: {
+                    total: { increment: totalValue },
+                    items: {
+                        create: orderItemsData,
+                    },
+                },
+                include: { items: true },
+            });
+        }
+        else
+        {
+            order = await prisma.order.create({
+                data: {
+                    userId: req.user.id,
+                    status: null,
+                    total: totalValue,
+                    items: {
+                        create: orderItemsData,
+                    },
+                },
+                include: { items: true },
+            });
+        }
+    }
+    else
+    {
+        order = await prisma.order.create({
+            data: {
+                userId: req.user.id,
+                status: 'pending',
+                total: totalValue,
+                items: {
+                    create: orderItemsData,
+                },
+            },
+            include: { items: true },
+        });
+    }
 
     res.status(201).json({
         status: 'success',

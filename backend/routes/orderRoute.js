@@ -10,6 +10,8 @@ router.route('/')
     .get(orderController.getAllOrders)
     .post(orderController.createOrder);
 
+router.get('/cart', orderController.getAllCartOrders);
+
 router.get('/me', orderController.getMyOrders);
 router.get('/chef', orderController.getChefOrders);
 
