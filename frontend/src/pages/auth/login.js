@@ -2,6 +2,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useForm } from "react-hook-form";
 import useAuth from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const { handleLogin, isLoggingIn, loginError } = useAuth();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -19,29 +21,29 @@ export default function LoginPage() {
   } = useForm();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Head>
-        <title>Login | Etbokhly</title>
+        <title>{t.auth.login.metaTitle}</title>
       </Head>
 
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-md border-border">
         <CardHeader className="text-center">
-          <CardTitle className="font-display text-4xl text-secondary">Welcome Back</CardTitle>
+          <CardTitle className="font-sans text-3xl font-extrabold text-foreground">{t.auth.login.title}</CardTitle>
 
-          <CardDescription>Login to your Etbokhly account</CardDescription>
+          <CardDescription className="text-muted-foreground">{t.auth.login.description}</CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.auth.login.emailLabel}</Label>
 
               <Input
                 {...register("email", {
-                  required: "Email is required",
+                  required: t.auth.validation.emailRequired,
                   pattern: {
                     value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: "Invalid email address",
+                    message: t.auth.validation.emailInvalid,
                   },
                 })}
                 id="email"
@@ -50,18 +52,18 @@ export default function LoginPage() {
                 placeholder="name@example.com"
               />
 
-              {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+              {errors.email && <p className="text-sm font-medium text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.auth.login.passwordLabel}</Label>
 
               <Input
                 {...register("password", {
-                  required: "Password is required",
+                  required: t.auth.validation.passwordRequired,
                   minLength: {
                     value: 8,
-                    message: "Minimum 8 characters",
+                    message: t.auth.validation.passwordMinLength,
                   },
                 })}
                 id="password"
@@ -70,21 +72,24 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
 
-              {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+              {errors.password && <p className="text-sm font-medium text-destructive">{errors.password.message}</p>}
             </div>
 
-            {loginError && <p className="text-center text-sm text-red-500">{loginError}</p>}
+            {loginError && <p className="text-center text-sm font-medium text-destructive">{loginError}</p>}
 
-            <Button type="submit" className="w-full" disabled={isLoggingIn}>
-              {isLoggingIn ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full font-bold shadow-sm" disabled={isLoggingIn}>
+              {isLoggingIn ? t.auth.login.loggingInButton : t.auth.login.submitButton}
             </Button>
           </form>
         </CardContent>
 
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          <span>Don&apos;t have an account?</span>
-          <Link href="/auth/signup" className="ml-1 font-medium text-accent hover:underline">
-            Sign Up
+        <CardFooter className="justify-center text-sm text-muted-foreground gap-1">
+          <span>{t.auth.login.noAccountText}</span>
+          <Link
+            href="/auth/signup"
+            className="font-semibold text-blue-500 hover:text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {t.auth.login.signUpLink}
           </Link>
         </CardFooter>
       </Card>

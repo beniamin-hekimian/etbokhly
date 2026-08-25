@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Circle } from "lucide-react";
-import Loading from "@/components/loading";
+import { Circle, Loader2 } from "lucide-react";
 
+import Loading from "@/components/loading";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ import { Label } from "@/components/ui/label";
 export default function BecomeChefPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState(null);
   const [requestStatus, setRequestStatus] = useState(null);
@@ -68,7 +70,7 @@ export default function BecomeChefPage() {
         const statusResult = await statusResponse.json();
 
         if (!profileResponse.ok || profileResult.status !== "success") {
-          throw new Error(profileResult.message || "Failed to load your profile information.");
+          throw new Error(profileResult.message || t?.profile?.becomeChef?.loadError);
         }
 
         const userProfile = profileResult.data;
@@ -83,20 +85,18 @@ export default function BecomeChefPage() {
 
         if (statusResponse.ok && statusResult.status === "success") {
           setRequestStatus(statusResult.data.chefRequestStatus);
-
           setRejectReason(statusResult.data.chefRequestRejectReason || "");
         }
       } catch (error) {
         console.error("Failed to load become-a-chef page:", error);
-
-        setPageError(error.message || "Failed to load your information.");
+        setPageError(error.message || t?.profile?.becomeChef?.loadError);
       } finally {
         setIsFetching(false);
       }
     };
 
     fetchData();
-  }, [authLoading, isAuthenticated, reset]);
+  }, [authLoading, isAuthenticated, reset, t]);
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -121,18 +121,17 @@ export default function BecomeChefPage() {
       const result = await response.json();
 
       if (!response.ok || result.status !== "success") {
-        throw new Error(result.message || "Failed to send your chef request.");
+        throw new Error(result.message || t?.profile?.becomeChef?.submitError);
       }
 
       setRequestStatus("PENDING");
       setRejectReason("");
 
-      toast.success(result.message || "Your request has been sent.");
+      toast.success(result.message || t?.profile?.becomeChef?.pendingNotice);
 
       router.push("/profile");
     } catch (error) {
       console.error("Failed to send chef request:", error);
-
       setPageError(error.message);
       toast.error(error.message);
     } finally {
@@ -141,28 +140,30 @@ export default function BecomeChefPage() {
   };
 
   if (authLoading || (isAuthenticated && isFetching)) {
-    return (
-      <Loading />
-    );
+    return <Loading />;
   }
 
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
         <Head>
-          <title>Become a Chef | Etbokhly</title>
+          <title>{t?.profile?.becomeChef?.metaTitle} | Etbokhly</title>
         </Head>
 
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-border bg-card shadow-sm">
           <CardHeader className="text-center">
-            <CardTitle className="font-display text-4xl text-secondary">Become a Chef</CardTitle>
+            <CardTitle className="font-display text-3xl font-extrabold text-foreground sm:text-4xl">
+              {t?.profile?.becomeChef?.title}
+            </CardTitle>
 
-            <CardDescription>Sign in to submit a chef request.</CardDescription>
+            <CardDescription className="text-muted-foreground">
+              {t?.profile?.becomeChef?.signInRequired}
+            </CardDescription>
           </CardHeader>
 
           <CardContent className="flex justify-center">
             <Link href="/auth/login">
-              <Button>Go to Login</Button>
+              <Button className="font-bold shadow-xs">{t?.profile?.becomeChef?.goToLogin}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -174,19 +175,23 @@ export default function BecomeChefPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
         <Head>
-          <title>Become a Chef | Etbokhly</title>
+          <title>{t?.profile?.becomeChef?.metaTitle} | Etbokhly</title>
         </Head>
 
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-border bg-card shadow-sm">
           <CardHeader className="text-center">
-            <CardTitle className="font-display text-4xl text-secondary">Become a Chef</CardTitle>
+            <CardTitle className="font-display text-3xl font-extrabold text-foreground sm:text-4xl">
+              {t?.profile?.becomeChef?.title}
+            </CardTitle>
 
-            <CardDescription>{pageError}</CardDescription>
+            <CardDescription className="text-muted-foreground">{pageError}</CardDescription>
           </CardHeader>
 
           <CardContent className="flex justify-center">
             <Link href="/profile">
-              <Button variant="outline">Back to Profile</Button>
+              <Button variant="outline" className="font-bold shadow-xs">
+                {t?.profile?.becomeChef?.backToProfile}
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -199,21 +204,25 @@ export default function BecomeChefPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
       <Head>
-        <title>Become a Chef | Etbokhly</title>
+        <title>{t?.profile?.becomeChef?.metaTitle} | Etbokhly</title>
       </Head>
 
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="font-display text-4xl text-secondary">Become a Chef</CardTitle>
+      <Card className="w-full max-w-md border-border bg-card shadow-sm">
+        <CardHeader className="text-center space-y-1.5">
+          <CardTitle className="font-display text-3xl font-extrabold text-foreground sm:text-4xl">
+            {t?.profile?.becomeChef?.title}
+          </CardTitle>
 
-          <CardDescription>Tell us a little about yourself before submitting your request.</CardDescription>
+          <CardDescription className="text-sm text-muted-foreground">
+            {t?.profile?.becomeChef?.subtitle}
+          </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pt-2">
           {isPending && (
             <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
               <Circle className="h-2.5 w-2.5 shrink-0 animate-pulse fill-amber-500 stroke-none" />
-              Your chef request is currently pending.
+              {t?.profile?.becomeChef?.pendingNotice}
             </div>
           )}
 
@@ -221,83 +230,98 @@ export default function BecomeChefPage() {
             <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3">
               <div className="flex items-center gap-2 text-sm font-medium text-red-700">
                 <Circle className="h-2.5 w-2.5 shrink-0 animate-pulse fill-red-500 stroke-none" />
-                Your previous request was rejected.
+                {t?.profile?.becomeChef?.rejectedNotice}
               </div>
 
               <p className="mt-1 text-sm text-red-600">{rejectReason}</p>
 
-              <p className="mt-2 text-xs text-red-600">You can update your information and submit a new request.</p>
+              <p className="mt-2 text-xs text-red-600">{t?.profile?.becomeChef?.updateInfoHint}</p>
             </div>
           )}
 
           {requestStatus === "REJECTED" && !rejectReason && (
             <div className="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <Circle className="h-2.5 w-2.5 shrink-0 animate-pulse fill-red-500 stroke-none" />
-              Your previous request was rejected. You can submit a new request.
+              {t?.profile?.becomeChef?.rejectedNoticeNew}
             </div>
           )}
 
-          {pageError && <p className="mb-4 text-center text-sm text-red-500">{pageError}</p>}
+          {pageError && <p className="mb-4 text-center text-xs font-medium text-destructive">{pageError}</p>}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone" className="font-semibold text-foreground">
+                {t?.profile?.becomeChef?.phone}
+              </Label>
 
               <Input
                 {...register("phone", {
-                  required: "Phone is required",
+                  required: t?.profile?.becomeChef?.phoneRequired,
                 })}
                 id="phone"
                 type="text"
                 autoComplete="tel"
-                placeholder="Your phone number"
+                placeholder={t?.profile?.becomeChef?.phonePlaceholder}
                 disabled={isPending || isSubmitting}
               />
 
-              {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
+              {errors.phone && <p className="text-xs font-medium text-destructive">{errors.phone.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location" className="font-semibold text-foreground">
+                {t?.profile?.becomeChef?.location}
+              </Label>
 
               <Input
                 {...register("location", {
-                  required: "Location is required",
+                  required: t?.profile?.becomeChef?.locationRequired,
                 })}
                 id="location"
                 type="text"
-                placeholder="Your location"
+                placeholder={t?.profile?.becomeChef?.locationPlaceholder}
                 disabled={isPending || isSubmitting}
               />
 
-              {errors.location && <p className="text-sm text-red-500">{errors.location.message}</p>}
+              {errors.location && <p className="text-xs font-medium text-destructive">{errors.location.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio" className="font-semibold text-foreground">
+                {t?.profile?.becomeChef?.bio}
+              </Label>
 
               <Input
                 {...register("bio", {
-                  required: "Bio is required",
+                  required: t?.profile?.becomeChef?.bioRequired,
                 })}
                 id="bio"
                 type="text"
-                placeholder="Tell us about yourself"
+                placeholder={t?.profile?.becomeChef?.bioPlaceholder}
                 disabled={isPending || isSubmitting}
               />
 
-              {errors.bio && <p className="text-sm text-red-500">{errors.bio.message}</p>}
+              {errors.bio && <p className="text-xs font-medium text-destructive">{errors.bio.message}</p>}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isPending || isSubmitting}>
-              {isSubmitting ? "Sending Request..." : isPending ? "Request Pending" : "Submit Chef Request"}
+            <Button type="submit" className="w-full gap-2 font-bold shadow-xs" disabled={isPending || isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t?.profile?.becomeChef?.submitting}
+                </>
+              ) : isPending ? (
+                t?.profile?.becomeChef?.requestPending
+              ) : (
+                t?.profile?.becomeChef?.submitRequest
+              )}
             </Button>
           </form>
         </CardContent>
 
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          <Link href="/profile" className="font-medium text-accent hover:underline">
-            Back to Profile
+        <CardFooter className="justify-center border-t border-border/60 pt-4 text-sm text-muted-foreground">
+          <Link href="/profile" className="font-medium text-blue-500 hover:text-blue-600 hover:underline">
+            {t?.profile?.becomeChef?.backToProfile}
           </Link>
         </CardFooter>
       </Card>

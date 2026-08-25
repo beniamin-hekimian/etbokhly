@@ -3,6 +3,13 @@ const nextConfig = {
   reactCompiler: true,
   reactStrictMode: true,
 
+  // i18n config for Arabic and English
+  i18n: {
+    locales: ["ar", "en"],
+    defaultLocale: "ar",
+    localeDetection: false,
+  },
+
   // cloudinary image optimization
   images: {
     remotePatterns: [

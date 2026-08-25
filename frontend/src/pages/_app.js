@@ -1,43 +1,52 @@
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 import Head from "next/head";
-import { Amatic_SC, Merriweather, Open_Sans } from "next/font/google";
-import "@/styles/globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/context/AuthContext";
+import { Cairo, Tajawal } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { useTranslation } from "@/hooks/useTranslation";
+import "@/styles/globals.css";
 
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  variable: "--font-open-sans",
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  weight: ["500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
   display: "swap",
 });
 
-const amaticaSC = Amatic_SC({
-  subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-amatica-sc",
-  display: "swap",
-});
-
-const merriweather = Merriweather({
-  subsets: ["latin"],
-  weight: ["300", "400", "700"],
-  variable: "--font-merriweather",
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-tajawal",
   display: "swap",
 });
 
 export default function App({ Component, pageProps }) {
+  const { locale } = useRouter();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const dir = locale === "ar" ? "rtl" : "ltr";
+    document.documentElement.dir = dir;
+    document.documentElement.lang = locale || "ar";
+  }, [locale]);
+
   return (
-    <div className={`${openSans.className} ${openSans.variable} ${amaticaSC.variable} ${merriweather.variable}`}>
+    <div className={`${cairo.className} ${cairo.variable} ${tajawal.variable}`}>
       <Head>
-        <title>Etbokhly - Homemade Food Selling Web App</title>
+        <title>{t.meta.title}</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
 
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <AuthProvider>
           <Navbar />
           <Component {...pageProps} />
-          <Toaster richColors position="top-center" />
+          <Footer />
+          <Toaster dir="ltr" richColors position="top-center" />
         </AuthProvider>
       </ThemeProvider>
     </div>

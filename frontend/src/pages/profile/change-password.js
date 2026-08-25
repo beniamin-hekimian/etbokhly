@@ -4,7 +4,10 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import Loading from "@/components/loading";
 
 // Shadcn UI Components
@@ -16,6 +19,8 @@ import { Label } from "@/components/ui/label";
 export default function ChangePasswordPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading, login } = useAuth();
+  const { t } = useTranslation();
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [serverError, setServerError] = useState("");
 
@@ -55,16 +60,12 @@ export default function ChangePasswordPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || "Failed to update your password.");
+        throw new Error(result.message || t?.profile?.changePassword?.updateError);
       }
 
       if (result.status === "success") {
-        // Overwrite old storage with the fresh session token issued by your Express server
         login(result.token, result.data.user);
-
-        toast.success("Password changed successfully!");
-
-        // Push user back to the primary profile card view
+        toast.success(t?.profile?.changePassword?.successToast);
         router.push("/profile");
       }
     } catch (err) {
@@ -75,25 +76,29 @@ export default function ChangePasswordPage() {
     }
   };
 
-  // Guard loading pass
   if (authLoading) {
-    return (
-      <Loading />
-    );
+    return <Loading />;
   }
 
-  // Security Auth guard boundary
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
-        <Card className="w-full max-w-md">
+        <Head>
+          <title>{t?.profile?.changePassword?.metaTitle} | Etbokhly</title>
+        </Head>
+
+        <Card className="w-full max-w-md border-border bg-card shadow-sm">
           <CardHeader className="text-center">
-            <CardTitle>Update Password</CardTitle>
-            <CardDescription>Sign in first to adjust your security credentials.</CardDescription>
+            <CardTitle className="font-display text-3xl font-extrabold text-foreground sm:text-4xl">
+              {t?.profile?.changePassword?.title}
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              {t?.profile?.changePassword?.signInRequired}
+            </CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
-            <Link href="/login">
-              <Button>Go to Login</Button>
+            <Link href="/auth/login">
+              <Button className="font-bold shadow-xs">{t?.profile?.changePassword?.goToLogin}</Button>
             </Link>
           </CardFooter>
         </Card>
@@ -104,64 +109,84 @@ export default function ChangePasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
       <Head>
-        <title>Change Password | Etbokhly</title>
+        <title>{t?.profile?.changePassword?.metaTitle} | Etbokhly</title>
       </Head>
 
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="font-display text-4xl text-secondary">Update Password</CardTitle>
-          <CardDescription>Change your security credentials. Updates your session token automatically.</CardDescription>
+      <Card className="w-full max-w-md border-border bg-card shadow-sm">
+        <CardHeader className="text-center space-y-1.5">
+          <CardTitle className="font-display text-3xl font-extrabold text-foreground sm:text-4xl">
+            {t?.profile?.changePassword?.title}
+          </CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            {t?.profile?.changePassword?.subtitle}
+          </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pt-2">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Current Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="passwordCurrent">Current Password</Label>
+              <Label htmlFor="passwordCurrent" className="font-semibold text-foreground">
+                {t?.profile?.changePassword?.currentPassword}
+              </Label>
               <Input
                 {...register("passwordCurrent", {
-                  required: "Current password is required",
+                  required: t?.profile?.changePassword?.currentPasswordRequired,
                 })}
                 id="passwordCurrent"
                 type="password"
                 placeholder="••••••••"
+                disabled={isUpdating}
               />
-              {errors.passwordCurrent && <p className="text-sm text-red-500">{errors.passwordCurrent.message}</p>}
+              {errors.passwordCurrent && (
+                <p className="text-xs font-medium text-destructive">{errors.passwordCurrent.message}</p>
+              )}
             </div>
 
             {/* New Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password" className="font-semibold text-foreground">
+                {t?.profile?.changePassword?.newPassword}
+              </Label>
               <Input
                 {...register("password", {
-                  required: "New password is required",
-                  minLength: { value: 8, message: "Minimum 8 characters" },
+                  required: t?.profile?.changePassword?.newPasswordRequired,
+                  minLength: {
+                    value: 8,
+                    message: t?.profile?.changePassword?.minEightChars,
+                  },
                 })}
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                disabled={isUpdating}
               />
-              {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+              {errors.password && <p className="text-xs font-medium text-destructive">{errors.password.message}</p>}
             </div>
 
             {/* Confirm New Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword" className="font-semibold text-foreground">
+                {t?.profile?.changePassword?.confirmPassword}
+              </Label>
               <Input
                 {...register("confirmPassword", {
-                  required: "Please confirm your password",
-                  validate: (val) => val === getValues("password") || "Passwords do not match",
+                  required: t?.profile?.changePassword?.confirmPasswordRequired,
+                  validate: (val) => val === getValues("password") || t?.profile?.changePassword?.passwordsDoNotMatch,
                 })}
                 id="confirmPassword"
                 type="password"
                 placeholder="••••••••"
+                disabled={isUpdating}
               />
-              {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
+              {errors.confirmPassword && (
+                <p className="text-xs font-medium text-destructive">{errors.confirmPassword.message}</p>
+              )}
             </div>
 
             {/* Isolated Backend Response Error Container */}
             {serverError && (
-              <p className="text-sm font-medium text-red-500 text-center bg-red-50/50 p-2 rounded border border-red-100">
+              <p className="rounded border border-destructive/20 bg-destructive/10 p-2 text-center text-xs font-medium text-destructive">
                 {serverError}
               </p>
             )}
@@ -169,13 +194,20 @@ export default function ChangePasswordPage() {
             {/* Form Actions */}
             <div className="flex items-center justify-end gap-2 pt-2">
               <Link href="/profile">
-                <Button type="button" variant="outline">
-                  Cancel
+                <Button type="button" variant="outline" className="font-bold shadow-xs">
+                  {t?.profile?.changePassword?.cancel}
                 </Button>
               </Link>
 
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating ? "Updating password..." : "Update Password"}
+              <Button type="submit" className="gap-2 font-bold shadow-xs" disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t?.profile?.changePassword?.updating}
+                  </>
+                ) : (
+                  t?.profile?.changePassword?.submit
+                )}
               </Button>
             </div>
           </form>
