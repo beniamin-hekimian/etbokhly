@@ -9,10 +9,14 @@ datasource db {
 
 enum OrderStatus {
   pending
-  confirmed
-  shipped
+  accepted
+  rejected
   delivered
-  cancelled
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
 }
 
 enum ChefRequestStatus {
@@ -66,7 +70,8 @@ model User {
 
   likes    Like[]
   comments Comment[]
-  orders   Order[]
+  orders     Order[] @relation("CustomerOrders")
+  chefOrders Order[] @relation("ChefOrders")
 
   following Follow[] @relation("Follower")
   followers Follow[] @relation("Following")
@@ -168,17 +173,23 @@ model Comment {
 model Order {
   id String @id @default(uuid()) @db.Uuid
 
-  userId String      @map("user_id") @db.Uuid
-  status OrderStatus?
-  total  Decimal     @db.Decimal(10, 2)
+  userId        String        @map("user_id") @db.Uuid
+  chefId        String?       @map("chef_id") @db.Uuid
+  status        OrderStatus?
+  paymentStatus PaymentStatus @default(unpaid) @map("payment_status")
+  total         Decimal       @db.Decimal(10, 2)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User  @relation("CustomerOrders", fields: [userId], references: [id], onDelete: Cascade)
+  chef  User? @relation("ChefOrders", fields: [chefId], references: [id], onDelete: Cascade)
   items OrderItem[]
 
   @@index([userId])
+  @@index([chefId])
+  @@index([paymentStatus])
+  @@index([status])
   @@index([createdAt])
   @@map("orders")
 }
