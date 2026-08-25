@@ -26,6 +26,7 @@ import adminRoute from "./routes/adminRoute.js"
 import mealTagRoute from "./routes/mealTagRoutes.js"
 import orderRoute from "./routes/orderRoute.js"
 import chefRoute from "./routes/chefRoute.js"
+import homeRoute from "./routes/homeRoute.js"
 //import orderRoute from './routes/orderRoute.js'
 //import { prisma } from "./lib/prisma"
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,8 @@ app.use('/tag', tagRoute);
 app.use("/mealtag", mealTagRoute);
 app.use("/order",orderRoute);
 app.use("/chef",chefRoute)
+app.use("/home",homeRoute)
+app.use("/api/v1/home",homeRoute)
 app.listen(PORT, () =>
 {
     console.log(`server is running on port ${PORT}`);
