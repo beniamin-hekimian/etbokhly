@@ -32,7 +32,7 @@ function LogoIcon() {
   );
 }
 
-function NavLinks({ links, isAdmin, pathname, navLinkClass, t }) {
+function NavLinks({ links, isAdmin, isChef, pathname, navLinkClass, t }) {
   return (
     <>
       {links.map(({ href, label }) => (
@@ -50,6 +50,12 @@ function NavLinks({ links, isAdmin, pathname, navLinkClass, t }) {
             {t.nav.mealRequests}
           </Link>
         </>
+      )}
+
+      {isChef && (
+        <Link href="/chef/orders" className={navLinkClass("/chef/orders")}>
+          {t.nav.receivedOrders}
+        </Link>
       )}
     </>
   );
@@ -132,6 +138,7 @@ export function Navbar() {
           <NavLinks
             links={navLinks}
             isAdmin={user?.role === "ADMIN"}
+            isChef={user?.role === "CHEF"}
             pathname={router.pathname}
             navLinkClass={navLinkClass}
             t={t}
@@ -196,6 +203,7 @@ export function Navbar() {
             <NavLinks
               links={navLinks}
               isAdmin={user?.role === "ADMIN"}
+              isChef={user?.role === "CHEF"}
               pathname={router.pathname}
               navLinkClass={navLinkClass}
               t={t}

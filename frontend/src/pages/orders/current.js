@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
@@ -8,36 +8,16 @@ import OrderCard from "@/components/orders/order-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useMyOrders, useMyCurrentOrders, useMyPreviousOrders } from "@/hooks/useOrder";
+import { useMyCurrentOrders } from "@/hooks/useOrder";
 import { Reveal } from "@/components/reveal";
 
-const TABS = ["all", "current", "previous"];
-
-export default function OrdersPage() {
+export default function MyCurrentOrdersPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("all");
-
-  const allOrders = useMyOrders();
-  const currentOrders = useMyCurrentOrders();
-  const previousOrders = useMyPreviousOrders();
-
-  const hooks = {
-    all: allOrders,
-    current: currentOrders,
-    previous: previousOrders,
-  };
-
-  const { orders, loading, fetchOrders } = hooks[activeTab];
+  const { orders, loading, fetchOrders } = useMyCurrentOrders();
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
-
-  const tabLabels = {
-    all: t.orders?.allTab,
-    current: t.orders?.currentTab,
-    previous: t.orders?.previousTab,
-  };
 
   if (loading) {
     return <Loading />;
@@ -46,31 +26,14 @@ export default function OrdersPage() {
   return (
     <>
       <Head>
-        <title>{t.orders?.metaTitle}</title>
+        <title>{t.orders?.currentTab} | {t.orders?.metaTitle}</title>
       </Head>
       <section className="py-12 md:py-16">
         <div className="mx-auto max-w-4xl px-6">
           <Reveal>
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl md:text-4xl">{t.orders?.title}</h1>
-            </div>
-
-            {/* Tabs */}
-            <div className="mb-6 flex gap-2">
-              {TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
-                    activeTab === tab
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {tabLabels[tab]}
-                </button>
-              ))}
+              <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl md:text-4xl">{t.orders?.currentTab}</h1>
             </div>
 
             {/* Orders List */}
