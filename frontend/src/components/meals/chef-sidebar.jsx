@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,16 @@ export default function ChefSidebar({ user }) {
               </div>
             )}
           </div>
+
+          {/* View Chef Profile */}
+          <Link href={`/chef/${user?.id}`} className="mt-auto w-full block">
+            <Button
+              variant="outline"
+              className="w-full border-secondary bg-transparent font-bold text-secondary shadow-xs hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/10"
+            >
+              {t.topChefs.viewFullMenu}
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </div>

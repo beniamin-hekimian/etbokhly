@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function useOrdersFetcher(endpoint) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -10,7 +12,7 @@ function useOrdersFetcher(endpoint) {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً");
+      toast.error(t.toast.loginRequired);
       return;
     }
 
@@ -29,16 +31,16 @@ function useOrdersFetcher(endpoint) {
       if (response.ok && result.status === "success") {
         setOrders(result.data || []);
       } else {
-        throw new Error(result.message || "فشل تحميل الطلبات");
+        throw new Error(result.message || t.toast.ordersLoadError);
       }
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError(err.message);
-      toast.error(err.message || "حدث خطأ أثناء تحميل الطلبات");
+      toast.error(err.message || t.toast.ordersLoadCatch);
     } finally {
       setLoading(false);
     }
-  }, [endpoint]);
+  }, [endpoint, t]);
 
   return { orders, loading, error, fetchOrders };
 }
@@ -68,6 +70,7 @@ export function useChefPreviousOrders() {
 }
 
 export function useOrderDetail(id) {
+  const { t } = useTranslation();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -78,7 +81,7 @@ export function useOrderDetail(id) {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً");
+      toast.error(t.toast.loginRequired);
       return;
     }
 
@@ -97,28 +100,29 @@ export function useOrderDetail(id) {
       if (response.ok && result.status === "success") {
         setOrder(result.data || null);
       } else {
-        throw new Error(result.message || "فشل تحميل تفاصيل الطلب");
+        throw new Error(result.message || t.toast.orderDetailError);
       }
     } catch (err) {
       console.error("Error fetching order detail:", err);
       setError(err.message);
-      toast.error(err.message || "حدث خطأ أثناء تحميل تفاصيل الطلب");
+      toast.error(err.message || t.toast.orderDetailCatch);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   return { order, loading, error, fetchOrder };
 }
 
 export function useChefOrderActions() {
+  const { t } = useTranslation();
   const [actionLoading, setActionLoading] = useState(false);
 
   const updateStatus = useCallback(async (orderId, action) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً");
+      toast.error(t.toast.loginRequired);
       return null;
     }
 
@@ -135,19 +139,19 @@ export function useChefOrderActions() {
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
-        toast.success("تم تحديث حالة الطلب بنجاح");
+        toast.success(t.toast.orderStatusSuccess);
         return result.data;
       } else {
-        throw new Error(result.message || "فشل تحديث حالة الطلب");
+        throw new Error(result.message || t.toast.orderStatusError);
       }
     } catch (err) {
       console.error("Error updating order status:", err);
-      toast.error(err.message || "حدث خطأ أثناء تحديث حالة الطلب");
+      toast.error(err.message || t.toast.orderStatusCatch);
       return null;
     } finally {
       setActionLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const acceptOrder = useCallback((orderId) => updateStatus(orderId, "accept"), [updateStatus]);
   const rejectOrder = useCallback((orderId) => updateStatus(orderId, "reject"), [updateStatus]);

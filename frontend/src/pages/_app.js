@@ -46,7 +46,7 @@ export default function App({ Component, pageProps }) {
           <Navbar />
           <Component {...pageProps} />
           <Footer />
-          <Toaster dir="ltr" richColors position="top-center" />
+          <Toaster richColors position="top-center" />
         </AuthProvider>
       </ThemeProvider>
     </div>

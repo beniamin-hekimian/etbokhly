@@ -1,5 +1,7 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import useChefProfile from "@/hooks/useChefProfile";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,8 +14,10 @@ import ChefPublicMeals from "@/components/chefs/chef-public-meals";
 export default function ChefProfilePage() {
   const router = useRouter();
   const { id } = router.query;
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const { chef, meals, isLoading, error } = useChefProfile(id);
+
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   if (isLoading || !id) {
     return <Loading />;
@@ -36,6 +40,15 @@ export default function ChefProfilePage() {
       </Head>
 
       <div className="mx-auto w-full max-w-5xl space-y-6">
+        {/* Back Link */}
+        <Link
+          href="/meals"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+          <BackIcon className="h-4 w-4" />
+          {t.meals.details.backToDiscover}
+        </Link>
+
         {/* Page Header */}
         <div className="space-y-2 border-b border-border pb-6">
           <h1 className="font-display text-4xl font-bold text-foreground sm:text-5xl">{t.chefProfile.title}</h1>

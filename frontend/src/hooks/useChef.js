@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import useTags from "@/hooks/useTags";
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -11,6 +12,7 @@ const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "imag
 export default function useChef({ setValue, reset, clearErrors, selectedTags, mode = "create", mealId = null }) {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
 
   const [mealLoading, setMealLoading] = useState(false);
   const [mealError, setMealError] = useState("");
@@ -116,13 +118,13 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
     }
 
     if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
-      toast.error("Please select a JPG, PNG, WEBP, or GIF image.");
+      toast.error(t?.toast?.imageInvalidType || "Please select a JPG, PNG, WEBP, or GIF image.");
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error("Image size must be 5MB or less.");
+      toast.error(t?.toast?.imageSizeLimit || "Image size must be 5MB or less.");
       event.target.value = "";
       return;
     }
@@ -161,10 +163,10 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
 
       clearErrors("photo");
       setImagePreview(imageUrl);
-      toast.success("Meal image uploaded successfully");
+      toast.success(t?.toast?.imageUploadSuccess || "Meal image uploaded successfully");
     } catch (error) {
       console.error("Image upload error:", error);
-      toast.error(error instanceof Error ? error.message : "Image upload failed.");
+      toast.error(error instanceof Error ? error.message : t?.toast?.imageUploadError || "Image upload failed.");
     } finally {
       setIsUploadingImage(false);
     }
@@ -175,22 +177,22 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
     setSubmitError("");
 
     if (mode === "edit" && !mealId) {
-      toast.error("Meal ID is missing.");
+      toast.error(t?.toast?.mealIdMissing || "Meal ID is missing.");
       return;
     }
 
     if (!values.photo) {
-      toast.error("Meal image is required.");
+      toast.error(t?.toast?.mealImageRequired || "Meal image is required.");
       return;
     }
 
     if (values.tags.length < 1) {
-      toast.error("Select at least one tag.");
+      toast.error(t?.toast?.mealTagMin || "Select at least one tag.");
       return;
     }
 
     if (values.tags.length > 3) {
-      toast.error("You can select up to 3 tags.");
+      toast.error(t?.toast?.mealTagMax || "You can select up to 3 tags.");
       return;
     }
 
@@ -230,7 +232,12 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
         throw new Error(result?.message || `Could not ${mode === "edit" ? "update" : "create"} meal.`);
       }
 
-      toast.success(result?.message || `Meal ${mode === "edit" ? "updated" : "created"} successfully.`);
+      toast.success(
+        result?.message ||
+          (mode === "edit"
+            ? t?.toast?.mealUpdated || "Meal updated successfully."
+            : t?.toast?.mealCreated || "Meal created successfully.")
+      );
 
       router.push("/profile");
     } catch (error) {

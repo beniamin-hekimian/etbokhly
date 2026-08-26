@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth as useAuthContext } from "@/context/AuthContext";
 
 export default function useAuth() {
   const router = useRouter();
   const { login } = useAuthContext();
+  const { t } = useTranslation();
 
   // Login state
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -40,7 +42,7 @@ export default function useAuth() {
       if (result.status === "success") {
         login(result.token, result.data.user);
 
-        toast.success(`Welcome back, ${result.data.user.full_name}!`);
+        toast.success(t.toast.welcomeBack.replace("{{name}}", result.data.user.full_name));
 
         router.push("/");
       }
@@ -79,7 +81,7 @@ export default function useAuth() {
       if (result.status === "success") {
         login(result.token, result.data.user);
 
-        toast.success(`Welcome ${result.data.user.full_name}! Account created.`);
+        toast.success(t.toast.welcomeNew.replace("{{name}}", result.data.user.full_name));
 
         router.push("/");
       }

@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -21,7 +23,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     clearSession();
-    toast.info("Logged out successfully.");
+    toast.info(t.toast.logoutSuccess);
     router.push("/auth/login");
   };
 

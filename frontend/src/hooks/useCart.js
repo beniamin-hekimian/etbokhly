@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function useCart() {
+  const { t } = useTranslation();
   const [cartData, setCartData] = useState([]);
   const [cartTotal, setCartTotal] = useState(0);
   const [checkoutData, setCheckoutData] = useState([]);
@@ -13,7 +15,7 @@ export function useCart() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً لتصفح السلة");
+      toast.error(t.toast.loginRequiredCart);
       return;
     }
 
@@ -33,22 +35,22 @@ export function useCart() {
         setCartData(result.data || []);
         setCartTotal(result.cartTotal || 0);
       } else {
-        throw new Error(result.message || "فشل تحميل بيانات السلة");
+        throw new Error(result.message || t.toast.cartLoadError);
       }
     } catch (err) {
       console.error("Error fetching cart:", err);
       setError(err.message);
-      toast.error(err.message || "حدث خطأ أثناء تحميل السلة");
+      toast.error(err.message || t.toast.cartLoadCatch);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const addToCart = async (mealId, quantity = 1) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً لإضافة الوجبات إلى السلة");
+      toast.error(t.toast.loginRequiredAdd);
       return null;
     }
 
@@ -70,14 +72,14 @@ export function useCart() {
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
-        toast.success("تمت إضافة الوجبة إلى السلة بنجاح");
+        toast.success(t.toast.addToCartSuccess);
         return result;
       } else {
-        throw new Error(result.message || "فشلت إضافة الوجبة إلى السلة");
+        throw new Error(result.message || t.toast.addToCartError);
       }
     } catch (err) {
       console.error("Error adding to cart:", err);
-      toast.error(err.message || "حدث خطأ أثناء الإضافة إلى السلة");
+      toast.error(err.message || t.toast.addToCartCatch);
       setError(err.message);
       return null;
     } finally {
@@ -89,7 +91,7 @@ export function useCart() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً");
+      toast.error(t.toast.loginRequired);
       return;
     }
 
@@ -109,22 +111,22 @@ export function useCart() {
         setCheckoutData(result.data || []);
         setCheckoutTotal(result.checkoutTotal || 0);
       } else {
-        throw new Error(result.message || "فشل تحميل ملخص الطلب");
+        throw new Error(result.message || t.toast.checkoutSummaryError);
       }
     } catch (err) {
       console.error("Error fetching checkout summary:", err);
       setError(err.message);
-      toast.error(err.message || "حدث خطأ أثناء تحميل ملخص الطلب");
+      toast.error(err.message || t.toast.checkoutSummaryCatch);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const checkout = useCallback(async () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("يرجى تسجيل الدخول أولاً");
+      toast.error(t.toast.loginRequired);
       return null;
     }
 
@@ -143,22 +145,22 @@ export function useCart() {
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
-        toast.success("تم تأكيد طلبك بنجاح!");
+        toast.success(t.toast.checkoutSuccess);
         setCartData([]);
         setCartTotal(0);
         return result;
       } else {
-        throw new Error(result.message || "فشل تأكيد الطلب");
+        throw new Error(result.message || t.toast.checkoutError);
       }
     } catch (err) {
       console.error("Error checking out:", err);
-      toast.error(err.message || "حدث خطأ أثناء تأكيد الطلب");
+      toast.error(err.message || t.toast.checkoutCatch);
       setError(err.message);
       return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   return {
     cartData,

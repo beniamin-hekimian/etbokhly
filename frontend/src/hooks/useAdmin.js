@@ -1,8 +1,10 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Manage admin chef operations
 export function useAdminChefs() {
+  const { t } = useTranslation();
   const [chefs, setChefs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,12 +40,12 @@ export function useAdminChefs() {
       });
       const result = await res.json();
       if (!res.ok || result.status !== "success") {
-        throw new Error(result.message || "Failed to approve chef request.");
+        throw new Error(result.message || t.toast.adminChefApproveError);
       }
-      toast.success("Chef request approved.");
+      toast.success(t.toast.adminChefApproveSuccess);
       await fetchChefRequests();
     } catch (err) {
-      toast.error(err.message || "Failed to approve chef request.");
+      toast.error(err.message || t.toast.adminChefApproveError);
     } finally {
       setActionLoading(false);
     }
@@ -60,13 +62,13 @@ export function useAdminChefs() {
       });
       const result = await res.json();
       if (!res.ok || result.status !== "success") {
-        throw new Error(result.message || "Failed to reject chef request.");
+        throw new Error(result.message || t.toast.adminChefRejectError);
       }
-      toast.success("Chef request rejected.");
+      toast.success(t.toast.adminChefRejectSuccess);
       await fetchChefRequests();
       return true;
     } catch (err) {
-      toast.error(err.message || "Failed to reject chef request.");
+      toast.error(err.message || t.toast.adminChefRejectError);
       return false;
     } finally {
       setActionLoading(false);
@@ -78,6 +80,7 @@ export function useAdminChefs() {
 
 // Manage admin meal operations
 export function useAdminMeals() {
+  const { t } = useTranslation();
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -113,12 +116,12 @@ export function useAdminMeals() {
       });
       const result = await res.json();
       if (!res.ok || result.status !== "success") {
-        throw new Error(result.message || "Failed to approve meal request.");
+        throw new Error(result.message || t.toast.adminMealApproveError);
       }
-      toast.success("Meal request approved.");
+      toast.success(t.toast.adminMealApproveSuccess);
       await fetchMealRequests();
     } catch (err) {
-      toast.error(err.message || "Failed to approve meal request.");
+      toast.error(err.message || t.toast.adminMealApproveError);
     } finally {
       setActionLoading(false);
     }
@@ -135,13 +138,13 @@ export function useAdminMeals() {
       });
       const result = await res.json();
       if (!res.ok || result.status !== "success") {
-        throw new Error(result.message || "Failed to reject meal request.");
+        throw new Error(result.message || t.toast.adminMealRejectError);
       }
-      toast.success("Meal request rejected.");
+      toast.success(t.toast.adminMealRejectSuccess);
       await fetchMealRequests();
       return true;
     } catch (err) {
-      toast.error(err.message || "Failed to reject meal request.");
+      toast.error(err.message || t.toast.adminMealRejectError);
       return false;
     } finally {
       setActionLoading(false);
