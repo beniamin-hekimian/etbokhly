@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -67,12 +68,14 @@ export function TopChefs({ chefs = [] }) {
                   )}
 
                   {/* Action Button */}
-                  <Button
-                    variant="outline"
-                    className="mt-auto w-full border-secondary bg-transparent font-bold text-secondary shadow-xs hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/10"
-                  >
-                    {t.topChefs.viewFullMenu}
-                  </Button>
+                  <Link href={`/chef/${chef.id}`} className="mt-auto w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full border-secondary bg-transparent font-bold text-secondary shadow-xs hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/10"
+                    >
+                      {t.topChefs.viewFullMenu}
+                    </Button>
+                  </Link>
                 </article>
               );
             })}

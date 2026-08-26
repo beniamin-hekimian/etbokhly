@@ -265,6 +265,74 @@ export const requestMeal = catchAsync(async (req, res, next) => {
     data: meal,
   });
 });
+// =========================
+// Get Public Chef Profile
+// =========================
+
+export const getPublicChefProfile = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return next(new appError("Please provide a chef id!", 400));
+  }
+
+  const chef = await prisma.user.findUnique({
+    where: {
+      id,
+      role: "CHEF",
+    },
+    select: {
+      id: true,
+      full_name: true,
+      email: true,
+      profile_image: true,
+      bio: true,
+      phone: true,
+      location: true,
+      role: true,
+      createdAt: true,
+    },
+  });
+
+  if (!chef) {
+    return next(new appError("Chef not found!", 404));
+  }
+
+  const meals = await prisma.meal.findMany({
+    where: {
+      user_id: id,
+      mealRequestStatus: "APPROVED",
+    },
+    select: {
+      id: true,
+      title: true,
+      photo: true,
+      price: true,
+      content: true,
+      createdAt: true,
+      tags: {
+        select: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: chef,
+    meals,
+  });
+});
+
 //Get Meal Request Status
 
 export const getMealRequestStatus = catchAsync(

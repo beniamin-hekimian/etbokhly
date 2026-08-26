@@ -8,7 +8,7 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 // Custom hook for managing chef-related functionalities, including meal creation and editing, image upload, and tag selection
-export default function useChef({ setValue, reset, selectedTags, mode = "create", mealId = null }) {
+export default function useChef({ setValue, reset, clearErrors, selectedTags, mode = "create", mealId = null }) {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
@@ -159,6 +159,7 @@ export default function useChef({ setValue, reset, selectedTags, mode = "create"
         shouldValidate: true,
       });
 
+      clearErrors("photo");
       setImagePreview(imageUrl);
       toast.success("Meal image uploaded successfully");
     } catch (error) {
@@ -166,7 +167,6 @@ export default function useChef({ setValue, reset, selectedTags, mode = "create"
       toast.error(error instanceof Error ? error.message : "Image upload failed.");
     } finally {
       setIsUploadingImage(false);
-      event.target.value = "";
     }
   }
 
@@ -232,11 +232,7 @@ export default function useChef({ setValue, reset, selectedTags, mode = "create"
 
       toast.success(result?.message || `Meal ${mode === "edit" ? "updated" : "created"} successfully.`);
 
-      if (mode === "edit") {
-        router.push("/profile");
-      } else {
-        router.push("/meals");
-      }
+      router.push("/profile");
     } catch (error) {
       console.error(`${mode === "edit" ? "Update" : "Create"} meal error:`, error);
       const message =

@@ -395,4 +395,13 @@ export const ar = {
       },
     },
   },
+  chefProfile: {
+    metaTitle: "ملف الطباخ",
+    title: "ملف الطباخ",
+    description: "تعرّف على هذا الطباخ واستكشف قائمته.",
+    mealsTitle: "القائمة",
+    noMeals: "هذا الطباخ لم يضف أي وجبات بعد.",
+    notFound: "الطباخ غير موجود.",
+    noDescription: "لا يوجد وصف محدد.",
+  },
 };

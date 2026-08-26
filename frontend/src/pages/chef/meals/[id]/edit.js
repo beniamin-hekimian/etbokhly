@@ -27,6 +27,7 @@ export default function ChefMealEditPage() {
     setValue,
     control,
     reset,
+    clearErrors,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -62,6 +63,7 @@ export default function ChefMealEditPage() {
   } = useChef({
     setValue,
     reset,
+    clearErrors,
     selectedTags,
     mode: "edit",
     mealId: id,

@@ -24,6 +24,7 @@ export default function ChefMealCreatePage() {
     setValue,
     control,
     reset,
+    clearErrors,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -57,6 +58,7 @@ export default function ChefMealCreatePage() {
   } = useChef({
     setValue,
     reset,
+    clearErrors,
     selectedTags,
     mode: "create",
   });

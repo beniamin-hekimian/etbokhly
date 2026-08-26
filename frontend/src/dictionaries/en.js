@@ -396,4 +396,13 @@ export const en = {
       },
     },
   },
+  chefProfile: {
+    metaTitle: "Chef Profile",
+    title: "Chef Profile",
+    description: "Learn more about this chef and explore their menu.",
+    mealsTitle: "Menu",
+    noMeals: "This chef hasn't added any meals yet.",
+    notFound: "Chef not found.",
+    noDescription: "No description provided.",
+  },
 };
