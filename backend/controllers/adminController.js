@@ -1,6 +1,20 @@
 import { prisma } from "../lib/prisma"
 import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
+import { getPagination, paginationMeta } from '../utils/pagination.js';
+
+const hasPendingMealEdit = (meal) =>
+  [
+    meal.pendingTitle,
+    meal.pendingPhoto,
+    meal.pendingPrice,
+    meal.pendingContent,
+    meal.pendingTagIds,
+  ].some((value) => value !== null && value !== undefined);
+
+const isPendingMealEdit = (meal) =>
+  (meal.mealRequestStatus === "APPROVED" && meal.editRequestStatus === "PENDING") ||
+  (meal.mealRequestStatus === "PENDING" && hasPendingMealEdit(meal));
 
 /*
 export const getChefRequests = catchAsync(async (req, res) => {
@@ -23,41 +37,25 @@ export const getChefRequests = catchAsync(async (req, res) => {
   });
 });*/
 export const getChefRequests = catchAsync(async (req, res) => {
-  const requests = await prisma.user.findMany({
-    where: {
-      chefRequestStatus: {
-        in: ["PENDING", "APPROVED", "REJECTED"],
-      },
-    },
-    select: {
-      id: true,
-      full_name: true,
-      email: true,
-      phone: true,
-      profile_image: true,
-      bio: true,
-      role: true,
-      chefRequestStatus: true,
-      chefRequestRejectReason: true,
-      createdAt: true,
-      location:true,
-      profile: {
-        select: {
-          about_me: true,
-        },
-      },
-    },
-
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  res.status(200).json({
+  const pagination = getPagination(req);
+  const where = { chefRequestStatus: { in: ["PENDING", "APPROVED", "REJECTED"] } };
+  const query = { where, orderBy: { createdAt: "desc" } };
+  if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
+  const [requests, total] = await Promise.all([
+    prisma.user.findMany({ ...query, select: {
+      id: true, full_name: true, email: true, phone: true, profile_image: true, bio: true,
+      role: true, chefRequestStatus: true, chefRequestRejectReason: true, createdAt: true,
+      location: true, profile: { select: { about_me: true } },
+    }}),
+    pagination ? prisma.user.count({ where }) : Promise.resolve(null),
+  ]);
+  const response = {
     status: "success",
     results: requests.length,
     data: requests,
-  });
+  };
+  if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+  res.status(200).json(response);
 });
 export const approveChefRequest = catchAsync(async (req, res, next) => {
   const user = await prisma.user.findUnique({
@@ -117,12 +115,11 @@ export const rejectChefRequest = catchAsync(async (req, res, next) => {
 });
 ////////
 export const getAllMealRequests = catchAsync(async (req, res, next) => {
-  const meals = await prisma.meal.findMany({
-    where: {
-      mealRequestStatus: {
-        in: ["PENDING", "APPROVED", "REJECTED"],
-      },
-    },
+  const pagination = getPagination(req);
+  const where = { mealRequestStatus: { in: ["PENDING", "APPROVED", "REJECTED"] } };
+  const query = { where, orderBy: { createdAt: "desc" } };
+  if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
+  const [meals, total] = await Promise.all([prisma.meal.findMany({ ...query,
 
     select: {
       id: true,
@@ -133,6 +130,13 @@ export const getAllMealRequests = catchAsync(async (req, res, next) => {
 
       mealRequestStatus: true,
       mealRequestRejectReason: true,
+      editRequestStatus: true,
+      editRequestRejectReason: true,
+      pendingTitle: true,
+      pendingPhoto: true,
+      pendingPrice: true,
+      pendingContent: true,
+      pendingTagIds: true,
 
       createdAt: true,
       updatedAt: true,
@@ -155,16 +159,15 @@ export const getAllMealRequests = catchAsync(async (req, res, next) => {
       },
     },
 
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  }), pagination ? prisma.meal.count({ where }) : Promise.resolve(null)]);
 
-  res.status(200).json({
+  const response = {
     status: "success",
     results: meals.length,
     data: meals,
-  });
+  };
+  if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+  res.status(200).json(response);
 });
 
 export const approveMeal = catchAsync(async (req, res, next) => {
@@ -188,24 +191,51 @@ export const approveMeal = catchAsync(async (req, res, next) => {
     );
   }
 
-  if (meal.mealRequestStatus !== "PENDING") {
+  const isEditRequest = isPendingMealEdit(meal);
+  const isCreateRequest = meal.mealRequestStatus === "PENDING" && !isEditRequest;
+
+  if (!isCreateRequest && !isEditRequest) {
     return next(
       new appError(
-        `Meal request is already ${meal.mealRequestStatus}`,
+        "There is no pending meal request to approve.",
         400
       )
     );
   }
 
-  const updatedMeal = await prisma.meal.update({
-    where: {
-      id,
-    },
-
-    data: {
-      mealRequestStatus: "APPROVED",
-      mealRequestRejectReason: null,
-    },
+  const updatedMeal = await prisma.$transaction(async (tx) => {
+    const pendingTags = isEditRequest && Array.isArray(meal.pendingTagIds) ? meal.pendingTagIds : null;
+    if (pendingTags !== null) {
+      await tx.mealTag.deleteMany({ where: { meal_id: id } });
+      if (pendingTags.length) await tx.mealTag.createMany({ data: pendingTags.map((tag_id) => ({ meal_id: id, tag_id })) });
+    }
+    return tx.meal.update({ where: { id }, data: isEditRequest
+      ? {
+          title: meal.pendingTitle ?? meal.title,
+          photo: meal.pendingPhoto ?? meal.photo,
+          price: meal.pendingPrice ?? meal.price,
+          content: meal.pendingContent ?? meal.content,
+          mealRequestStatus: "APPROVED",
+          mealRequestRejectReason: null,
+          editRequestStatus: "APPROVED",
+          editRequestRejectReason: null,
+          pendingTitle: null,
+          pendingPhoto: null,
+          pendingPrice: null,
+          pendingContent: null,
+          pendingTagIds: null,
+        }
+      : {
+          mealRequestStatus: "APPROVED",
+          mealRequestRejectReason: null,
+          editRequestStatus: null,
+          editRequestRejectReason: null,
+          pendingTitle: null,
+          pendingPhoto: null,
+          pendingPrice: null,
+          pendingContent: null,
+          pendingTagIds: null,
+        },
 
     select: {
       id: true,
@@ -215,6 +245,8 @@ export const approveMeal = catchAsync(async (req, res, next) => {
       content: true,
       mealRequestStatus: true,
       mealRequestRejectReason: true,
+      editRequestStatus: true,
+      editRequestRejectReason: true,
 
       user: {
         select: {
@@ -235,6 +267,7 @@ export const approveMeal = catchAsync(async (req, res, next) => {
       createdAt: true,
       updatedAt: true,
     },
+    });
   });
 
   res.status(200).json({
@@ -276,10 +309,13 @@ export const rejectMeal = catchAsync(async (req, res, next) => {
     );
   }
 
-  if (meal.mealRequestStatus !== "PENDING") {
+  const isEditRequest = isPendingMealEdit(meal);
+  const isCreateRequest = meal.mealRequestStatus === "PENDING" && !isEditRequest;
+
+  if (!isCreateRequest && !isEditRequest) {
     return next(
       new appError(
-        `Meal request is already ${meal.mealRequestStatus}`,
+        "There is no pending meal request to reject.",
         400
       )
     );
@@ -290,10 +326,29 @@ export const rejectMeal = catchAsync(async (req, res, next) => {
       id,
     },
 
-    data: {
-      mealRequestStatus: "REJECTED",
-      mealRequestRejectReason: reason,
-    },
+    data: isEditRequest
+      ? {
+          mealRequestStatus: "APPROVED",
+          mealRequestRejectReason: null,
+          editRequestStatus: "REJECTED",
+          editRequestRejectReason: reason,
+          pendingTitle: null,
+          pendingPhoto: null,
+          pendingPrice: null,
+          pendingContent: null,
+          pendingTagIds: null,
+        }
+      : {
+          mealRequestStatus: "REJECTED",
+          mealRequestRejectReason: reason,
+          editRequestStatus: null,
+          editRequestRejectReason: null,
+          pendingTitle: null,
+          pendingPhoto: null,
+          pendingPrice: null,
+          pendingContent: null,
+          pendingTagIds: null,
+        },
 
     select: {
       id: true,
@@ -303,6 +358,8 @@ export const rejectMeal = catchAsync(async (req, res, next) => {
       content: true,
       mealRequestStatus: true,
       mealRequestRejectReason: true,
+      editRequestStatus: true,
+      editRequestRejectReason: true,
 
       user: {
         select: {

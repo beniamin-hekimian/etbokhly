@@ -32,5 +32,7 @@ router.patch('/:id/status', restrictToAdmin, orderController.updateOrderStatus);
 router.patch('/:id/accept', orderController.acceptOrder);
 router.patch('/:id/reject', orderController.rejectOrder);
 router.patch('/:id/deliver', orderController.deliverOrder);
+router.patch('/:id/items/:itemId', orderController.updateOrderItemQuantity);
+router.delete('/:id/items/:itemId', orderController.deleteOrderItem);
 
 export default router;

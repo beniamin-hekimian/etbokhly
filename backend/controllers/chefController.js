@@ -3,6 +3,7 @@ import catchAsync from "../utils/catchAsync.js";
 import appError from "../utils/appError.js";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
+import { getPagination, paginationMeta } from "../utils/pagination.js";
 
 const storage = multer.memoryStorage();
 
@@ -27,7 +28,10 @@ export const updateMeal = catchAsync(async (req, res, next) => {
 
   const {
     tagIds,
-    ...updatedData
+    title,
+    photo,
+    price,
+    content,
   } = req.body;
 
   if (!id) {
@@ -44,39 +48,56 @@ export const updateMeal = catchAsync(async (req, res, next) => {
     return next(new appError("Meal not found!", 404));
   }
 
-  const meal = await prisma.$transaction(async (tx) => {
+  if (tagIds !== undefined && !Array.isArray(tagIds))
+    return next(new appError("tagIds must be an array", 400));
 
-    // Update meal data
-    const updatedMeal = await tx.meal.update({
-      where: {
-        id,
-      },
-      data: updatedData,
+  const changes = { title, photo, price, content };
+  Object.keys(changes).forEach((key) => changes[key] === undefined && delete changes[key]);
+  if (Object.keys(changes).length === 0 && tagIds === undefined)
+    return next(new appError("Please provide meal data to update.", 400));
+
+  const meal = await prisma.$transaction(async (tx) => {
+    const isPublishedMeal = founded.mealRequestStatus === "APPROVED";
+    const pendingData = Object.fromEntries(
+      Object.entries(changes).map(([key, value]) => [
+        `pending${key[0].toUpperCase()}${key.slice(1)}`,
+        value,
+      ])
+    );
+
+    await tx.meal.update({
+      where: { id },
+      data: isPublishedMeal
+        ? {
+            ...pendingData,
+            ...(tagIds !== undefined ? { pendingTagIds: tagIds } : {}),
+            editRequestStatus: "PENDING",
+            editRequestRejectReason: null,
+          }
+        : {
+            ...changes,
+            mealRequestStatus: "PENDING",
+            mealRequestRejectReason: null,
+            editRequestStatus: null,
+            editRequestRejectReason: null,
+            pendingTitle: null,
+            pendingPhoto: null,
+            pendingPrice: null,
+            pendingContent: null,
+            pendingTagIds: null,
+          },
     });
 
-    
-    if (tagIds !== undefined) {
-
-     
-      await tx.mealTag.deleteMany({
-        where: {
-          meal_id: id,
-        },
-      });
-
-      
-      if (tagIds.length > 0) {
+    if (!isPublishedMeal && tagIds !== undefined) {
+      await tx.mealTag.deleteMany({ where: { meal_id: id } });
+      if (tagIds.length) {
         await tx.mealTag.createMany({
-          data: tagIds.map((tagId) => ({
-            meal_id: id,
-            tag_id: tagId,
-          })),
+          data: tagIds.map((tag_id) => ({ meal_id: id, tag_id })),
         });
       }
     }
 
-   
-    return await tx.meal.findUnique({
+    return tx.meal.findUnique({
       where: {
         id,
       },
@@ -86,6 +107,15 @@ export const updateMeal = catchAsync(async (req, res, next) => {
         photo: true,
         price: true,
         content: true,
+        mealRequestStatus: true,
+        mealRequestRejectReason: true,
+        editRequestStatus: true,
+        editRequestRejectReason: true,
+        pendingTitle: true,
+        pendingPhoto: true,
+        pendingPrice: true,
+        pendingContent: true,
+        pendingTagIds: true,
         createdAt: true,
         updatedAt: true,
 
@@ -298,11 +328,11 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
     return next(new appError("Chef not found!", 404));
   }
 
-  const meals = await prisma.meal.findMany({
-    where: {
-      user_id: id,
-      mealRequestStatus: "APPROVED",
-    },
+  const pagination = getPagination(req);
+  const mealsWhere = { user_id: id, mealRequestStatus: "APPROVED" };
+  const mealsQuery = { where: mealsWhere, orderBy: { createdAt: "desc" } };
+  if (pagination) { mealsQuery.skip = pagination.skip; mealsQuery.take = pagination.limit; }
+  const [meals, mealsTotal] = await Promise.all([prisma.meal.findMany({ ...mealsQuery,
     select: {
       id: true,
       title: true,
@@ -321,26 +351,26 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
         },
       },
     },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  }), pagination ? prisma.meal.count({ where: mealsWhere }) : Promise.resolve(null)]);
 
-  res.status(200).json({
+  const response = {
     status: "success",
     data: chef,
     meals,
-  });
+  };
+  if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, mealsTotal);
+  res.status(200).json(response);
 });
 
 //Get Meal Request Status
 
 export const getMealRequestStatus = catchAsync(
   async (req, res, next) => {
-    const meals = await prisma.meal.findMany({
-      where: {
-        user_id: req.user.id,
-      },
+    const pagination = getPagination(req);
+    const where = { user_id: req.user.id };
+    const query = { where, orderBy: { createdAt: "desc" } };
+    if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
+    const [meals, total] = await Promise.all([prisma.meal.findMany({ ...query,
 
       select: {
         id: true,
@@ -350,18 +380,24 @@ export const getMealRequestStatus = catchAsync(
         content: true,
         mealRequestStatus: true,
         mealRequestRejectReason: true,
+        editRequestStatus: true,
+        editRequestRejectReason: true,
+        pendingTitle: true,
+        pendingPhoto: true,
+        pendingPrice: true,
+        pendingContent: true,
+        pendingTagIds: true,
         createdAt: true,
         updatedAt: true,
       },
 
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    }), pagination ? prisma.meal.count({ where }) : Promise.resolve(null)]);
 
-    res.status(200).json({
+    const response = {
       status: "success",
       data: meals,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
   }
 );

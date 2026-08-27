@@ -3,6 +3,7 @@ import catchAsync from "../utils/catchAsync.js";
 import appError from "../utils/appError.js";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
+import { getPagination, paginationMeta } from "../utils/pagination.js";
 
 
 // =========================
@@ -56,10 +57,11 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
 });
 */
 export const getAllMeals = catchAsync(async (req, res, next) => {
-  const meals = await prisma.meal.findMany({
-    where: {
-      mealRequestStatus: "APPROVED",
-    },
+  const pagination = getPagination(req);
+  const where = { mealRequestStatus: "APPROVED" };
+  const query = { where, orderBy: { createdAt: "desc" } };
+  if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
+  const [meals, total] = await Promise.all([prisma.meal.findMany({ ...query,
 
     select: {
       id: true,
@@ -92,12 +94,14 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
       mealRequestStatus: true,
       mealRequestRejectReason: true,
     },
-  });
+  }), pagination ? prisma.meal.count({ where }) : Promise.resolve(null)]);
 
-  res.status(200).json({
+  const response = {
     status: "success",
     data: meals,
-  });
+  };
+  if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+  res.status(200).json(response);
 });
 // =========================
 // Get Single Meal
@@ -154,6 +158,10 @@ export const getMeal = catchAsync(async (req, res, next) => {
   if (!meal) {
     return next(new appError("Meal not found!", 404));
   }
+
+  const isOwner = req.user?.id === meal.user?.id;
+  if (meal.mealRequestStatus !== "APPROVED" && !isOwner && req.user?.role !== "ADMIN")
+    return next(new appError("Meal not found!", 404));
 
   res.status(200).json({
     status: "success",

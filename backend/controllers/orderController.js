@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import catchAsync from '../utils/catchAsync.js';
 import appError from '../utils/appError.js';
+import { getPagination, paginationMeta } from '../utils/pagination.js';
 
 const ACTIVE_ORDER_STATUSES = ['pending', 'accepted'];
 const PREVIOUS_ORDER_STATUSES = ['rejected', 'delivered'];
@@ -147,15 +148,22 @@ const getCartOrders = async (userId, tx = prisma) =>
         orderBy: { createdAt: 'desc' },
     });
 
-const getPaidOrders = async (where) =>
-    prisma.order.findMany({
-        where: {
-            paymentStatus: 'paid',
-            ...where,
-        },
+const getPaidOrders = async (where, pagination) => {
+    const query = {
+        where: { paymentStatus: 'paid', ...where },
         include: orderInclude,
         orderBy: { createdAt: 'desc' },
-    });
+    };
+    if (pagination) {
+        query.skip = pagination.skip;
+        query.take = pagination.limit;
+    }
+    const [orders, total] = await Promise.all([
+        prisma.order.findMany(query),
+        pagination ? prisma.order.count({ where: query.where }) : Promise.resolve(null),
+    ]);
+    return { orders, total };
+};
 
 const ensureChefOwnsPaidOrder = async (req, id, next) => {
     if (req.user.role !== 'CHEF')
@@ -304,6 +312,10 @@ export const getCheckoutSummary = catchAsync(async (req, res, next) =>
 
 export const checkout = catchAsync(async (req, res, next) =>
 {
+    const note = req.body?.note === undefined ? undefined : String(req.body.note).trim();
+    if (note !== undefined && note.length > 2000)
+        return next(new appError('Order note is too long.', 400));
+
     const checkedOutOrders = await prisma.$transaction(async (tx) =>
     {
         const cartOrders = await getCartOrders(req.user.id, tx);
@@ -332,6 +344,7 @@ export const checkout = catchAsync(async (req, res, next) =>
                 where: { id: order.id },
                 data: {
                     total: getCurrentOrderTotal(order.items),
+                    note: note || null,
                     paymentStatus: 'paid',
                     status: 'pending',
                 },
@@ -353,52 +366,64 @@ export const checkout = catchAsync(async (req, res, next) =>
 export const getAllOrders = catchAsync(async (req, res, next) =>
 {
     const where = req.user?.role === 'ADMIN' ? {} : { userId: req.user.id };
-    const orders = await getPaidOrders(where);
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders(where, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getMyOrders = catchAsync(async (req, res, next) =>
 {
-    const orders = await getPaidOrders({ userId: req.user.id });
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders({ userId: req.user.id }, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getMyCurrentOrders = catchAsync(async (req, res, next) =>
 {
-    const orders = await getPaidOrders({
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders({
         userId: req.user.id,
         status: { in: ACTIVE_ORDER_STATUSES },
-    });
+    }, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getMyPreviousOrders = catchAsync(async (req, res, next) =>
 {
-    const orders = await getPaidOrders({
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders({
         userId: req.user.id,
         status: { in: PREVIOUS_ORDER_STATUSES },
-    });
+    }, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getChefOrders = catchAsync(async (req, res, next) =>
@@ -406,13 +431,16 @@ export const getChefOrders = catchAsync(async (req, res, next) =>
     if (req.user.role !== 'CHEF')
         return next(new appError('Only chefs can access this route.', 403));
 
-    const orders = await getPaidOrders({ chefId: req.user.id });
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders({ chefId: req.user.id }, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getChefCurrentOrders = catchAsync(async (req, res, next) =>
@@ -420,16 +448,19 @@ export const getChefCurrentOrders = catchAsync(async (req, res, next) =>
     if (req.user.role !== 'CHEF')
         return next(new appError('Only chefs can access this route.', 403));
 
-    const orders = await getPaidOrders({
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders({
         chefId: req.user.id,
         status: { in: ACTIVE_ORDER_STATUSES },
-    });
+    }, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getChefPreviousOrders = catchAsync(async (req, res, next) =>
@@ -437,16 +468,19 @@ export const getChefPreviousOrders = catchAsync(async (req, res, next) =>
     if (req.user.role !== 'CHEF')
         return next(new appError('Only chefs can access this route.', 403));
 
-    const orders = await getPaidOrders({
+    const pagination = getPagination(req);
+    const { orders, total } = await getPaidOrders({
         chefId: req.user.id,
         status: { in: PREVIOUS_ORDER_STATUSES },
-    });
+    }, pagination);
 
-    res.status(200).json({
+    const response = {
         status: 'success',
         results: orders.length,
         data: orders,
-    });
+    };
+    if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+    res.status(200).json(response);
 });
 
 export const getOrder = catchAsync(async (req, res, next) =>
@@ -526,9 +560,16 @@ const updateChefOrderStatus = (action) => catchAsync(async (req, res, next) =>
     if (order.status !== transition.from)
         return next(new appError(`Order must be ${transition.from} before it can be ${transition.to}.`, 400));
 
+    const rejectionReason = action === 'reject' ? String(req.body?.rejectionReason || '').trim() : undefined;
+    if (action === 'reject' && !rejectionReason)
+        return next(new appError('يرجى إضافة سبب الرفض', 400));
+
     const updatedOrder = await prisma.order.update({
         where: { id },
-        data: { status: transition.to },
+        data: {
+            status: transition.to,
+            ...(action === 'reject' ? { rejectionReason } : {}),
+        },
         include: orderInclude,
     });
 
@@ -541,5 +582,57 @@ const updateChefOrderStatus = (action) => catchAsync(async (req, res, next) =>
 export const acceptOrder = updateChefOrderStatus('accept');
 export const rejectOrder = updateChefOrderStatus('reject');
 export const deliverOrder = updateChefOrderStatus('deliver');
+
+const assertOrderItemEditable = async (req, id, itemId) => {
+    const order = await prisma.order.findUnique({
+        where: { id },
+        include: { items: true },
+    });
+    if (!order) throw new appError('Order not found!', 404);
+    if (order.userId !== req.user.id && req.user.role !== 'ADMIN')
+        throw new appError('You are not allowed to modify this order.', 403);
+    if (['rejected', 'delivered'].includes(order.status))
+        throw new appError('This order can no longer be modified.', 400);
+    const item = order.items.find((entry) => entry.id === itemId);
+    if (!item) throw new appError('Order item not found!', 404);
+    return { order, item };
+};
+
+export const updateOrderItemQuantity = catchAsync(async (req, res, next) => {
+    const quantity = Number(req.body?.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1)
+        return next(new appError('quantity must be an integer greater than or equal to 1.', 400));
+
+    const { id, itemId } = req.params;
+    await assertOrderItemEditable(req, id, itemId);
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+        await tx.orderItem.update({ where: { id: itemId }, data: { quantity } });
+        const items = await tx.orderItem.findMany({ where: { orderId: id } });
+        return tx.order.update({
+            where: { id },
+            data: { total: getOrderTotal(items) },
+            include: orderInclude,
+        });
+    });
+    res.status(200).json({ status: 'success', data: updatedOrder });
+});
+
+export const deleteOrderItem = catchAsync(async (req, res, next) => {
+    const { id, itemId } = req.params;
+    const { order } = await assertOrderItemEditable(req, id, itemId);
+    if (order.items.length === 1)
+        return next(new appError('An order must contain at least one item.', 400));
+
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+        await tx.orderItem.delete({ where: { id: itemId } });
+        const items = await tx.orderItem.findMany({ where: { orderId: id } });
+        return tx.order.update({
+            where: { id },
+            data: { total: getOrderTotal(items) },
+            include: orderInclude,
+        });
+    });
+    res.status(200).json({ status: 'success', data: updatedOrder });
+});
 
 export const createOrder = addToCart;

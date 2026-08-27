@@ -5,12 +5,13 @@ import * as mealController from "../controllers/mealController.js";
 
 import {
   protect,
+  optionalProtect,
   restrictToChef,
 } from "../controllers/authController.js";
 
 const router = express.Router();
 router.route("/").get(mealController.getAllMeals);
-router  .route("/:id").get(mealController.getMeal)
+router.route("/:id").get(optionalProtect, mealController.getMeal)
 /*
 router.use(protect);
 

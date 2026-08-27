@@ -99,6 +99,13 @@ model Meal {
   photo                   String?
   mealRequestStatus       MealRequestStatus?
   mealRequestRejectReason String?
+  editRequestStatus       MealRequestStatus?
+  editRequestRejectReason String?
+  pendingTitle            String?
+  pendingPhoto            String?
+  pendingPrice            Decimal?           @db.Decimal(10, 2)
+  pendingContent          String?
+  pendingTagIds            Json?
   price                   Decimal            @db.Decimal(10, 2)
   content                 String
 
@@ -178,6 +185,8 @@ model Order {
   status        OrderStatus?
   paymentStatus PaymentStatus @default(unpaid) @map("payment_status")
   total         Decimal       @db.Decimal(10, 2)
+  note          String?
+  rejectionReason String?
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)

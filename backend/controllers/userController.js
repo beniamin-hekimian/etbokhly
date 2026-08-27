@@ -3,6 +3,7 @@ import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
 import multer from "multer";
 import cloudinary from "./../utils/cloudinary.js";
+import { getPagination, paginationMeta } from "../utils/pagination.js";
 export const getMe = (req, res, next) =>
 {
     req.params.id = req.user.id;
@@ -10,11 +11,19 @@ export const getMe = (req, res, next) =>
 };
 export const getAllUsers = catchAsync(async (req, res, next) =>
 {
-  const users = await prisma.user.findMany();
-  res.status(200).json({
+  const pagination = getPagination(req);
+  const query = {};
+  if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
+  const [users, total] = await Promise.all([
+    prisma.user.findMany(query),
+    pagination ? prisma.user.count() : Promise.resolve(null),
+  ]);
+  const response = {
     status: 'success',
     data: users
-  });
+  };
+  if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+  res.status(200).json(response);
 });
 export const getUser = catchAsync(async (req, res, next) =>
 {

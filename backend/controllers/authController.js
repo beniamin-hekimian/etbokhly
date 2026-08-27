@@ -172,6 +172,11 @@ export const protect = catchAsync(async (req, res, next) =>
   next();
 });
 
+export const optionalProtect = (req, res, next) => {
+  if (!req.headers.authorization?.startsWith("Bearer")) return next();
+  return protect(req, res, next);
+};
+
 // ======================================================
 // CHECK PASSWORD CHANGED
 // ======================================================

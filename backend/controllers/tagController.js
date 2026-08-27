@@ -1,14 +1,23 @@
 import { prisma } from "../lib/prisma"
 import catchAsync from './../utils/catchAsync.js'
 import appError from './../utils/appError.js';
+import { getPagination, paginationMeta } from '../utils/pagination.js';
 
 export const getAllTags = catchAsync(async (req, res, next) =>
 {
-  const tags = await prisma.tag.findMany();
-  res.status(200).json({
+  const pagination = getPagination(req);
+  const query = {};
+  if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
+  const [tags, total] = await Promise.all([
+    prisma.tag.findMany(query),
+    pagination ? prisma.tag.count() : Promise.resolve(null),
+  ]);
+  const response = {
     status: 'success',
     data: tags
-  });
+  };
+  if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
+  res.status(200).json(response);
 });
 
 export const getTag = catchAsync(async (req, res, next) =>
