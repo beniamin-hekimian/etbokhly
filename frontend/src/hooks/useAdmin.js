@@ -2,6 +2,22 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "@/hooks/useTranslation";
 
+export const hasPendingMealEdit = (meal) =>
+  [
+    meal?.pendingTitle,
+    meal?.pendingPhoto,
+    meal?.pendingPrice,
+    meal?.pendingContent,
+    meal?.pendingTagIds,
+  ].some((value) => value !== null && value !== undefined);
+
+export const isPendingMealEditRequest = (meal) =>
+  (meal?.mealRequestStatus === "APPROVED" && meal?.editRequestStatus === "PENDING") ||
+  (meal?.mealRequestStatus === "PENDING" && hasPendingMealEdit(meal));
+
+export const isCreateMealRequest = (meal) =>
+  meal?.mealRequestStatus === "PENDING" && !isPendingMealEditRequest(meal);
+
 // Manage admin chef operations
 export function useAdminChefs() {
   const { t } = useTranslation();

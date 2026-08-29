@@ -387,6 +387,16 @@ export const getMealRequestStatus = catchAsync(
         pendingPrice: true,
         pendingContent: true,
         pendingTagIds: true,
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },

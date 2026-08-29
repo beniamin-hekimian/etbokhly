@@ -20,6 +20,7 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [hasPendingEdit, setHasPendingEdit] = useState(false);
 
   const { tags, tagsLoading, tagsError, toggleTag } = useTags({ setValue, selectedTags });
 
@@ -86,6 +87,29 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
             });
 
             setImagePreview(meal.photo || "");
+            setHasPendingEdit(false);
+          }
+
+          try {
+            const statusResponse = await fetch("/api/chef/getcreatemealstatus", {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            const statusResult = await statusResponse.json();
+            const mealList = Array.isArray(statusResult.data) ? statusResult.data : [];
+            const currentMeal = mealList.find((item) => item.id === mealId);
+
+            if (!cancelled) {
+              setHasPendingEdit(currentMeal?.editRequestStatus === "PENDING");
+            }
+          } catch (statusError) {
+            console.error("Failed to detect pending meal edit:", statusError);
+            if (!cancelled) {
+              setHasPendingEdit(false);
+            }
           }
         } catch (error) {
           console.error("Failed to load meal:", error);
@@ -232,11 +256,15 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
         throw new Error(result?.message || `Could not ${mode === "edit" ? "update" : "create"} meal.`);
       }
 
+      const isPendingEdit = result?.data?.editRequestStatus === "PENDING";
+
       toast.success(
-        result?.message ||
-          (mode === "edit"
-            ? t?.toast?.mealUpdated || "Meal updated successfully."
-            : t?.toast?.mealCreated || "Meal created successfully.")
+        isPendingEdit
+          ? t?.chef?.editMeal?.editPendingSubmitted || "Your update has been submitted for review."
+          : result?.message ||
+              (mode === "edit"
+                ? t?.toast?.mealUpdated || "Meal updated successfully."
+                : t?.toast?.mealCreated || "Meal created successfully.")
       );
 
       router.push("/profile");
@@ -263,6 +291,7 @@ export default function useChef({ setValue, reset, clearErrors, selectedTags, mo
     isUploadingImage,
     isSubmitting,
     submitError,
+    hasPendingEdit,
     toggleTag,
     handleImageChange,
     submitMeal,

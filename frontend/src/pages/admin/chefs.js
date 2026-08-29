@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminChefs } from "@/hooks/useAdmin";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -11,9 +12,12 @@ import ChefCard from "@/components/admin/chef-card";
 import RejectChefDialog from "@/components/admin/reject-chef-dialog";
 
 export default function AdminChefsPage() {
+  const router = useRouter();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { chefs, loading, error, actionLoading, fetchChefRequests, approveChef, rejectChef } = useAdminChefs();
   const { t } = useTranslation();
+
+  const pendingChefs = chefs.filter((chef) => chef.chefRequestStatus === "PENDING");
 
   const [selectedChef, setSelectedChef] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -25,9 +29,15 @@ export default function AdminChefsPage() {
     }
   }, [authLoading, isAuthenticated, user, fetchChefRequests]);
 
-  if (authLoading || loading) return <Loading />;
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace("/auth/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
-  if (!isAuthenticated || user?.role !== "ADMIN") {
+  if (authLoading || !isAuthenticated) return <Loading />;
+
+  if (user?.role !== "ADMIN") {
     return (
       <div className="mx-auto flex w-full max-w-6xl items-center justify-center py-20">
         <Card className="w-full max-w-md border-border/60 bg-card shadow-sm">
@@ -46,6 +56,8 @@ export default function AdminChefsPage() {
       </div>
     );
   }
+
+  if (loading) return <Loading />;
 
   if (error) {
     return (
@@ -81,37 +93,39 @@ export default function AdminChefsPage() {
         <title>{t.admin.chefs.metaTitle}</title>
       </Head>
 
-      <div className="mx-auto w-full max-w-6xl space-y-6 p-4">
-        <div className="space-y-2 text-center">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {t.admin.chefs.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t.admin.chefs.description}</p>
-        </div>
-
-        {chefs.length === 0 ? (
-          <Card className="border-border/60 bg-card shadow-sm">
-            <CardContent className="flex min-h-40 items-center justify-center">
-              <p className="text-sm text-muted-foreground">{t.admin.chefs.emptyState}</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-5 lg:grid-cols-2">
-            {chefs.map((chef) => (
-              <ChefCard
-                key={chef.id}
-                chef={chef}
-                actionLoading={actionLoading}
-                onApprove={approveChef}
-                onOpenReject={(c) => {
-                  setSelectedChef(c);
-                  setRejectReason("");
-                  setRejectDialogOpen(true);
-                }}
-              />
-            ))}
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col p-4">
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              {t.admin.chefs.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">{t.admin.chefs.description}</p>
           </div>
-        )}
+
+          {pendingChefs.length === 0 ? (
+            <Card className="border-border/60 bg-card shadow-sm">
+              <CardContent className="flex min-h-40 items-center justify-center">
+                <p className="text-sm text-muted-foreground">{t.admin.chefs.emptyState}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-5 lg:grid-cols-2">
+              {pendingChefs.map((chef) => (
+                <ChefCard
+                  key={chef.id}
+                  chef={chef}
+                  actionLoading={actionLoading}
+                  onApprove={approveChef}
+                  onOpenReject={(c) => {
+                    setSelectedChef(c);
+                    setRejectReason("");
+                    setRejectDialogOpen(true);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <RejectChefDialog

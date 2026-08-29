@@ -67,8 +67,15 @@ export default function ChefMealsGrid() {
     fetchChefMeals();
   }, [token]);
 
-  const getStatusConfig = (status) => {
-    switch (status) {
+  const getStatusConfig = (meal) => {
+    if (meal.mealRequestStatus === "APPROVED" && meal.editRequestStatus === "PENDING") {
+      return {
+        label: t.profile.statusEditPending,
+        dotColor: "fill-sky-500",
+      };
+    }
+
+    switch (meal.mealRequestStatus) {
       case "APPROVED":
         return {
           label: t.profile.statusApproved,
@@ -160,7 +167,7 @@ export default function ChefMealsGrid() {
           <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
             {meals.map((meal) => {
               const mealPhotoSrc = meal.photo?.trim() ? meal.photo : "/placeholder-meal.webp";
-              const statusConfig = getStatusConfig(meal.mealRequestStatus);
+              const statusConfig = getStatusConfig(meal);
 
               return (
                 <Card
@@ -189,6 +196,21 @@ export default function ChefMealsGrid() {
                         {statusConfig.label}
                       </Badge>
                     </div>
+
+                    {/* Tags */}
+                    {meal.tags && meal.tags.length > 0 && (
+                      <div className="absolute bottom-3.5 inset-s-3.5 z-10 flex flex-wrap justify-start gap-1.5">
+                        {meal.tags.map((item, idx) => (
+                          <Badge
+                            key={item.tag?.id || idx}
+                            variant="secondary"
+                            className="border-0 bg-[#1F2937]/75 text-[0.72rem] font-bold text-white backdrop-blur-xs"
+                          >
+                            {item.tag?.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Meal Emoji fallback/badge if available */}
                     {meal.emoji && (
@@ -225,6 +247,14 @@ export default function ChefMealsGrid() {
                       <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
                         <span className="font-semibold">{t.profile.reasonLabel}: </span>
                         {meal.mealRequestRejectReason}
+                      </div>
+                    )}
+
+                    {/* Edit Rejection Reason */}
+                    {meal.editRequestStatus === "REJECTED" && meal.editRequestRejectReason && (
+                      <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
+                        <span className="font-semibold">{t.profile.editRejectReasonLabel}: </span>
+                        {meal.editRequestRejectReason}
                       </div>
                     )}
 

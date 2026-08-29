@@ -57,6 +57,7 @@ export default function ChefMealEditPage() {
     isUploadingImage,
     isSubmitting,
     submitError,
+    hasPendingEdit,
     toggleTag,
     handleImageChange,
     submitMeal,
@@ -107,6 +108,12 @@ export default function ChefMealEditPage() {
             </CardHeader>
 
             <CardContent>
+              {hasPendingEdit && (
+                <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-medium text-amber-600">
+                  {t.chef.editMeal.editPendingBanner}
+                </div>
+              )}
+
               <form id="edit-meal-form" onSubmit={handleSubmit(submitMeal)} className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2">
                   {/* Name */}

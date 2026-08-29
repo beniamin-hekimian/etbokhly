@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X, UserCircle2, LogOut, ShoppingCart, LogIn } from "lucide-react";
+import { Menu, X, UserCircle2, LogOut, ShoppingCart, LogIn, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -32,7 +32,7 @@ function LogoIcon() {
   );
 }
 
-function NavLinks({ links, isAdmin, isChef, pathname, navLinkClass, t }) {
+function NavLinks({ links, isChef, pathname, navLinkClass, t }) {
   return (
     <>
       {links.map(({ href, label }) => (
@@ -40,17 +40,6 @@ function NavLinks({ links, isAdmin, isChef, pathname, navLinkClass, t }) {
           {label}
         </Link>
       ))}
-
-      {isAdmin && (
-        <>
-          <Link href="/admin/chefs" className={navLinkClass("/admin/chefs")}>
-            {t.nav.chefRequests}
-          </Link>
-          <Link href="/admin/meals" className={navLinkClass("/admin/meals")}>
-            {t.nav.mealRequests}
-          </Link>
-        </>
-      )}
 
       {isChef && (
         <Link href="/chef/orders" className={navLinkClass("/chef/orders")}>
@@ -67,12 +56,35 @@ export function Navbar() {
   const { user, isAuthenticated, logout, loading } = useAuth();
   const { cartData, fetchCart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [desktopAdminOpen, setDesktopAdminOpen] = useState(false);
+  const [mobileAdminOpen, setMobileAdminOpen] = useState(false);
+  const desktopAdminRef = useRef(null);
 
   const navLinks = [
     { href: "/", label: t.nav.home },
     { href: "/meals", label: t.nav.meals },
     { href: "/orders", label: t.nav.orders },
   ];
+
+  const adminMenuItems = [
+    { href: "/admin/chefs", label: t.admin.chefs.title },
+    { href: "/admin/meals", label: t.admin.meals.title },
+    { href: "/admin/meal-edits", label: t.admin.mealEdits.title },
+  ];
+
+  // Close the desktop dashboard dropdown when clicking outside of it
+  useEffect(() => {
+    if (!desktopAdminOpen) return;
+
+    const handleOutsideClick = (event) => {
+      if (desktopAdminRef.current && !desktopAdminRef.current.contains(event.target)) {
+        setDesktopAdminOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [desktopAdminOpen]);
 
   // Fetch cart on mount and whenever route finishes changing (e.g. returning from adding to cart)
   useEffect(() => {
@@ -82,6 +94,8 @@ export function Navbar() {
 
     const handleRouteChange = () => {
       setMenuOpen(false);
+      setDesktopAdminOpen(false);
+      setMobileAdminOpen(false);
       if (isAuthenticated) {
         fetchCart();
       }
@@ -137,12 +151,46 @@ export function Navbar() {
         <nav className="hidden items-center gap-8 md:flex">
           <NavLinks
             links={navLinks}
-            isAdmin={user?.role === "ADMIN"}
             isChef={user?.role === "CHEF"}
             pathname={router.pathname}
             navLinkClass={navLinkClass}
             t={t}
           />
+
+          {user?.role === "ADMIN" && (
+            <div className="relative" ref={desktopAdminRef}>
+              <button
+                type="button"
+                onClick={() => setDesktopAdminOpen((prev) => !prev)}
+                className={`flex items-center gap-1.5 py-1.5 font-bold transition-colors ${
+                  isActive(router.pathname, "/admin")
+                    ? "text-primary"
+                    : "text-foreground hover:text-primary"
+                }`}
+              >
+                {t.nav.dashboard}
+                <ChevronDown className={`h-4 w-4 transition-transform ${desktopAdminOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {desktopAdminOpen && (
+                <div className="absolute top-full ltr:left-0 rtl:right-0 mt-2 w-60 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+                  {adminMenuItems.map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`block px-4 py-2.5 text-sm font-semibold transition-colors ${
+                        isActive(router.pathname, href)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Desktop Actions */}
@@ -202,12 +250,46 @@ export function Navbar() {
           <nav className="flex flex-col items-start gap-4">
             <NavLinks
               links={navLinks}
-              isAdmin={user?.role === "ADMIN"}
               isChef={user?.role === "CHEF"}
               pathname={router.pathname}
               navLinkClass={navLinkClass}
               t={t}
             />
+
+            {user?.role === "ADMIN" && (
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={() => setMobileAdminOpen((prev) => !prev)}
+                  className={`flex w-full items-center justify-between py-1.5 font-bold transition-colors ${
+                    isActive(router.pathname, "/admin")
+                      ? "text-primary"
+                      : "text-foreground hover:text-primary"
+                  }`}
+                >
+                  <span>{t.nav.dashboard}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${mobileAdminOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {mobileAdminOpen && (
+                  <div className="mt-2 flex flex-col gap-3 border-s-2 border-border ps-4">
+                    {adminMenuItems.map(({ href, label }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`text-sm font-semibold transition-colors ${
+                          isActive(router.pathname, href)
+                            ? "text-primary"
+                            : "text-foreground hover:text-primary"
+                        }`}
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Auth Action in Mobile Drawer */}
             <div className="mt-2 w-full border-t pt-3">
