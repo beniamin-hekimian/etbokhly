@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useCart } from "@/hooks/useCart";
+import NoteDialog from "@/components/checkout/note-dialog";
 import { Reveal } from "@/components/reveal";
 
 export default function CheckoutPage() {
@@ -20,6 +21,8 @@ export default function CheckoutPage() {
   const { checkoutData, checkoutTotal, fetchCheckoutSummary, checkout, loading, error } = useCart();
   const [isConfirming, setIsConfirming] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCheckoutSummary();
@@ -27,10 +30,12 @@ export default function CheckoutPage() {
 
   async function handleConfirmOrder() {
     setIsConfirming(true);
-    const result = await checkout();
+    const result = await checkout(note);
     setIsConfirming(false);
 
     if (result) {
+      setNoteDialogOpen(false);
+      setNote("");
       setOrderConfirmed(true);
     }
   }
@@ -211,7 +216,7 @@ export default function CheckoutPage() {
                     <Button
                       className="w-full font-bold shadow-xs mt-2"
                       size="lg"
-                      onClick={handleConfirmOrder}
+                      onClick={() => setNoteDialogOpen(true)}
                       disabled={isConfirming}
                     >
                       {isConfirming ? (
@@ -230,6 +235,15 @@ export default function CheckoutPage() {
           </Reveal>
         </div>
       </section>
+
+      <NoteDialog
+        open={noteDialogOpen}
+        onOpenChange={setNoteDialogOpen}
+        note={note}
+        setNote={setNote}
+        confirming={isConfirming}
+        onConfirm={handleConfirmOrder}
+      />
     </>
   );
 }

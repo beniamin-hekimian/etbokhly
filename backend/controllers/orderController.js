@@ -619,12 +619,15 @@ export const updateOrderItemQuantity = catchAsync(async (req, res, next) => {
 
 export const deleteOrderItem = catchAsync(async (req, res, next) => {
     const { id, itemId } = req.params;
-    const { order } = await assertOrderItemEditable(req, id, itemId);
-    if (order.items.length === 1)
-        return next(new appError('An order must contain at least one item.', 400));
+    await assertOrderItemEditable(req, id, itemId);
 
     const updatedOrder = await prisma.$transaction(async (tx) => {
         await tx.orderItem.delete({ where: { id: itemId } });
+        const remainingCount = await tx.orderItem.count({ where: { orderId: id } });
+
+        if (remainingCount === 0)
+            return tx.order.delete({ where: { id }, include: orderInclude });
+
         const items = await tx.orderItem.findMany({ where: { orderId: id } });
         return tx.order.update({
             where: { id },

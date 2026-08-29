@@ -122,7 +122,90 @@ export function useCart() {
     }
   }, [t]);
 
-  const checkout = useCallback(async () => {
+  const applyOrderResponse = useCallback((order) => {
+    if (!order) return;
+
+    setCartData((prev) => {
+      const next =
+        order.items?.length === 0
+          ? prev.filter((entry) => entry.id !== order.id)
+          : prev.map((entry) => (entry.id === order.id ? order : entry));
+
+      setCartTotal(
+        next.reduce((sum, entry) => sum + Number(entry.total || entry.price || 0), 0)
+      );
+
+      return next;
+    });
+  }, []);
+
+  const updateItemQuantity = async (orderId, itemId, quantity) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      toast.error(t.toast.loginRequired);
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/order/${orderId}/items/${itemId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ quantity }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === "success") {
+        applyOrderResponse(result.data);
+        toast.success(t.toast.cartUpdateSuccess);
+        return true;
+      } else {
+        throw new Error(result.message || t.toast.cartUpdateError);
+      }
+    } catch (err) {
+      console.error("Error updating cart item:", err);
+      toast.error(err.message || t.toast.cartUpdateCatch);
+      return false;
+    }
+  };
+
+  const removeCartItem = async (orderId, itemId) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      toast.error(t.toast.loginRequired);
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/order/${orderId}/items/${itemId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === "success") {
+        applyOrderResponse(result.data);
+        toast.success(t.toast.cartRemoveSuccess);
+        return true;
+      } else {
+        throw new Error(result.message || t.toast.cartRemoveError);
+      }
+    } catch (err) {
+      console.error("Error removing cart item:", err);
+      toast.error(err.message || t.toast.cartRemoveCatch);
+      return false;
+    }
+  };
+
+  const checkout = useCallback(async (note) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -140,6 +223,7 @@ export function useCart() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ note: note ?? "" }),
       });
 
       const result = await response.json();
@@ -170,6 +254,8 @@ export function useCart() {
     fetchCart,
     fetchCheckoutSummary,
     addToCart,
+    updateItemQuantity,
+    removeCartItem,
     checkout,
     loading,
     error,

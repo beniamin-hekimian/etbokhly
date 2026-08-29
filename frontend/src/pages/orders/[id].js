@@ -3,7 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { ArrowRight, ChefHat, MapPin, Phone } from "lucide-react";
+import { ArrowRight, Ban, ChefHat, MapPin, Phone, StickyNote } from "lucide-react";
 import Loading from "@/components/loading";
 
 import { Button } from "@/components/ui/button";
@@ -103,6 +103,36 @@ export default function OrderDetailPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Note */}
+                {order.note && (
+                  <Card className="border-border bg-card shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                        <StickyNote className="h-5 w-5 text-primary" />
+                        {t.orders?.detail?.yourNote}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{order.note}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Rejection Reason */}
+                {order.status === "rejected" && order.rejectionReason && (
+                  <Card className="border-destructive/30 bg-card shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                        <Ban className="h-5 w-5 text-destructive" />
+                        {t.orders?.detail?.rejectionReason}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="whitespace-pre-wrap leading-relaxed text-destructive/80">{order.rejectionReason}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Items */}
                 <Card className="border-border bg-card shadow-sm">

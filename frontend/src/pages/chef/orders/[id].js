@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { ArrowRight, MapPin, Phone, User } from "lucide-react";
+import { ArrowRight, Ban, MapPin, Phone, User, StickyNote } from "lucide-react";
 import Loading from "@/components/loading";
+import RejectOrderDialog from "@/components/orders/reject-order-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,8 @@ export default function ChefOrderDetailPage() {
   const { id } = router.query;
   const { order, loading, error, fetchOrder } = useOrderDetail(id);
   const { actionLoading, acceptOrder, rejectOrder, deliverOrder } = useChefOrderActions();
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -37,13 +40,23 @@ export default function ChefOrderDetailPage() {
 
     if (action === "accept") {
       result = await acceptOrder(order.id);
-    } else if (action === "reject") {
-      result = await rejectOrder(order.id);
     } else if (action === "deliver") {
       result = await deliverOrder(order.id);
     }
 
     if (result) {
+      fetchOrder();
+    }
+  }
+
+  async function handleConfirmReject() {
+    if (!order) return;
+
+    const result = await rejectOrder(order.id, rejectReason);
+
+    if (result) {
+      setRejectDialogOpen(false);
+      setRejectReason("");
       fetchOrder();
     }
   }
@@ -119,6 +132,36 @@ export default function ChefOrderDetailPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Note */}
+                {order.note && (
+                  <Card className="border-border bg-card shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                        <StickyNote className="h-5 w-5 text-primary" />
+                        {t.chefOrders?.detail?.customerNote}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{order.note}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Rejection Reason */}
+                {order.status === "rejected" && order.rejectionReason && (
+                  <Card className="border-destructive/30 bg-card shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                        <Ban className="h-5 w-5 text-destructive" />
+                        {t.chefOrders?.detail?.rejectionReason}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="whitespace-pre-wrap leading-relaxed text-destructive/80">{order.rejectionReason}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Items */}
                 <Card className="border-border bg-card shadow-sm">
@@ -231,7 +274,10 @@ export default function ChefOrderDetailPage() {
                         <Button
                           className="w-full font-bold"
                           variant="destructive"
-                          onClick={() => handleAction("reject")}
+                          onClick={() => {
+                            setRejectReason("");
+                            setRejectDialogOpen(true);
+                          }}
                           disabled={actionLoading}
                         >
                           {t.chefOrders?.detail?.reject}
@@ -259,6 +305,21 @@ export default function ChefOrderDetailPage() {
           </Reveal>
         </div>
       </section>
+
+      <RejectOrderDialog
+        open={rejectDialogOpen}
+        onOpenChange={(val) => {
+          setRejectDialogOpen(val);
+          if (!val && !actionLoading) {
+            setRejectReason("");
+          }
+        }}
+        order={order}
+        reason={rejectReason}
+        setReason={setRejectReason}
+        actionLoading={actionLoading}
+        onConfirm={handleConfirmReject}
+      />
     </>
   );
 }

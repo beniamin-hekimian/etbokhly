@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import Loading from "@/components/loading";
 import OrderCard from "@/components/orders/order-card";
+import RejectOrderDialog from "@/components/orders/reject-order-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +22,9 @@ export default function ChefOrdersPage() {
   const currentOrders = useChefCurrentOrders();
   const previousOrders = useChefPreviousOrders();
   const { actionLoading, acceptOrder, rejectOrder, deliverOrder } = useChefOrderActions();
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   const hooks = {
     all: allOrders,
@@ -39,13 +43,24 @@ export default function ChefOrdersPage() {
 
     if (action === "accept") {
       result = await acceptOrder(orderId);
-    } else if (action === "reject") {
-      result = await rejectOrder(orderId);
     } else if (action === "deliver") {
       result = await deliverOrder(orderId);
     }
 
     if (result) {
+      fetchOrders();
+    }
+  }
+
+  async function handleConfirmReject() {
+    if (!rejectTarget) return;
+
+    const result = await rejectOrder(rejectTarget.id, rejectReason);
+
+    if (result) {
+      setRejectDialogOpen(false);
+      setRejectReason("");
+      setRejectTarget(null);
       fetchOrders();
     }
   }
@@ -127,7 +142,11 @@ export default function ChefOrdersPage() {
                             size="sm"
                             variant="destructive"
                             className="text-xs font-bold"
-                            onClick={() => handleAction("reject", order.id)}
+                            onClick={() => {
+                              setRejectTarget(order);
+                              setRejectReason("");
+                              setRejectDialogOpen(true);
+                            }}
                             disabled={actionLoading}
                           >
                             {t.chefOrders?.reject}
@@ -151,6 +170,22 @@ export default function ChefOrdersPage() {
           </Reveal>
         </div>
       </section>
+
+      <RejectOrderDialog
+        open={rejectDialogOpen}
+        onOpenChange={(val) => {
+          setRejectDialogOpen(val);
+          if (!val && !actionLoading) {
+            setRejectTarget(null);
+            setRejectReason("");
+          }
+        }}
+        order={rejectTarget}
+        reason={rejectReason}
+        setReason={setRejectReason}
+        actionLoading={actionLoading}
+        onConfirm={handleConfirmReject}
+      />
     </>
   );
 }

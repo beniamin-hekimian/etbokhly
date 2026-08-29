@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChefHat, MapPin, Phone } from "lucide-react";
+import { Ban, ChefHat, MapPin, Phone, StickyNote } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -77,6 +77,30 @@ export default function OrderCard({ order, showChef = true, showCustomer = false
           </Badge>
         </div>
       </CardHeader>
+
+      {/* Order Note */}
+      {order.note && (
+        <div className="flex items-start gap-2.5 border-b border-border/60 bg-primary/5 px-5 py-3.5">
+          <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-foreground">
+              {showCustomer ? t.orders?.customerNote : t.orders?.note}
+            </span>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm text-muted-foreground">{order.note}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Reason */}
+      {order.status === "rejected" && order.rejectionReason && (
+        <div className="flex items-start gap-2.5 border-b border-border/60 bg-destructive/5 px-5 py-3.5">
+          <Ban className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-destructive">{t.orders?.rejectionReason}</span>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm text-destructive/80">{order.rejectionReason}</p>
+          </div>
+        </div>
+      )}
 
       {/* Order Items */}
       <CardContent className="divide-y divide-border/60 p-0">

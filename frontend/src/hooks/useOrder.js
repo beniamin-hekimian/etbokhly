@@ -118,7 +118,7 @@ export function useChefOrderActions() {
   const { t } = useTranslation();
   const [actionLoading, setActionLoading] = useState(false);
 
-  const updateStatus = useCallback(async (orderId, action) => {
+  const updateStatus = useCallback(async (orderId, action, body = null) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -133,7 +133,9 @@ export function useChefOrderActions() {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
+          ...(body ? { "Content-Type": "application/json" } : {}),
         },
+        body: body ? JSON.stringify(body) : undefined,
       });
 
       const result = await response.json();
@@ -154,7 +156,7 @@ export function useChefOrderActions() {
   }, [t]);
 
   const acceptOrder = useCallback((orderId) => updateStatus(orderId, "accept"), [updateStatus]);
-  const rejectOrder = useCallback((orderId) => updateStatus(orderId, "reject"), [updateStatus]);
+  const rejectOrder = useCallback((orderId, rejectionReason) => updateStatus(orderId, "reject", { rejectionReason }), [updateStatus]);
   const deliverOrder = useCallback((orderId) => updateStatus(orderId, "deliver"), [updateStatus]);
 
   return { actionLoading, acceptOrder, rejectOrder, deliverOrder };
