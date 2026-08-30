@@ -17,6 +17,7 @@ import useMeals from "@/hooks/useMeals";
 import ChefSidebar from "@/components/meals/chef-sidebar";
 import FormattedDate from "@/components/meals/formatted-date";
 import { QuantityInput, MAX_QUANTITY } from "@/components/ui/quantity-input";
+import LikeButton from "@/components/meals/like-button";
 
 export default function MealDetailsPage() {
   const router = useRouter();
@@ -104,6 +105,12 @@ export default function MealDetailsPage() {
                 priority
                 sizes="(max-width: 1024px) 100vw, 66vw"
                 className="object-cover"
+              />
+
+              {/* Likes */}
+              <LikeButton
+                meal={meal}
+                className="absolute top-4 inset-s-4 z-10 bg-[#1F2937]/75 text-white hover:bg-[#1F2937]"
               />
             </div>
 

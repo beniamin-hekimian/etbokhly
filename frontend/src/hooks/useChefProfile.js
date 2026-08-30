@@ -15,7 +15,10 @@ export default function useChefProfile(id) {
           setIsLoading(true);
           setError(null);
 
-          const response = await fetch(`/api/chef/profile/${id}`);
+          const token = localStorage.getItem("token");
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+          const response = await fetch(`/api/chef/profile/${id}`, { headers });
 
           if (!response.ok) {
             throw new Error(`HTTP error ${response.status}`);

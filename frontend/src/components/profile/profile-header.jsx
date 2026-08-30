@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Circle } from "lucide-react";
+import { Circle, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -24,6 +24,13 @@ export default function ProfileHeader({ role, chefRequestStatus }) {
           <Link href="/profile/change-password">
             <Button variant="outline" className="font-bold">
               {t.profile.changePasswordBtn}
+            </Button>
+          </Link>
+
+          <Link href="/profile/likes">
+            <Button variant="outline" className="gap-2 font-bold">
+              <Heart className="h-4 w-4" />
+              {t.profile.myLikes}
             </Button>
           </Link>
         </div>

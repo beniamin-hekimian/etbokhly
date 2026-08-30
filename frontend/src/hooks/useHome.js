@@ -14,7 +14,10 @@ export default function useHome() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch("/api/home");
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const response = await fetch("/api/home", { headers });
 
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);

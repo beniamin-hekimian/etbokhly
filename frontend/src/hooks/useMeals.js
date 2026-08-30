@@ -16,9 +16,12 @@ export default function useMeals(id = null) {
           setIsLoading(true);
           setError(null);
 
+          const token = localStorage.getItem("token");
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
           // Single meal fetch
           if (id) {
-            const response = await fetch(`/api/meal/${id}`);
+            const response = await fetch(`/api/meal/${id}`, { headers });
 
             if (!response.ok) {
               throw new Error(`HTTP error ${response.status}`);
@@ -37,7 +40,7 @@ export default function useMeals(id = null) {
           }
 
           // All meals fetch
-          const response = await fetch("/api/meal");
+          const response = await fetch("/api/meal", { headers });
 
           if (!response.ok) {
             throw new Error(`HTTP error ${response.status}`);
