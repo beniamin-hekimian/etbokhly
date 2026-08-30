@@ -156,6 +156,19 @@ export default function ChefMealCreatePage() {
                           return (Number.isFinite(parsed) && parsed > 0) || t.chef.createMeal.errors.priceInvalid;
                         },
                       })}
+                      onKeyDown={(e) => {
+                        if (e.key === "-" || e.key === "+" || e.key === "e" || e.key === "E") {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const text = e.clipboardData.getData("text");
+                        const valid = /^\d+(\.\d+)?$/.test(text);
+
+                        if (!valid) {
+                          e.preventDefault();
+                        }
+                      }}
                     />
 
                     {errors.price && <p className="text-xs font-medium text-destructive">{errors.price.message}</p>}

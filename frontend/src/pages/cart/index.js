@@ -3,8 +3,9 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { ShoppingBag, MapPin, Phone, ChefHat, ArrowRight, Minus, Plus, Trash2, Loader2 } from "lucide-react";
+import { ShoppingBag, MapPin, Phone, ChefHat, ArrowRight, Trash2, Loader2 } from "lucide-react";
 import Loading from "@/components/loading";
+import { QuantityInput, MAX_QUANTITY } from "@/components/ui/quantity-input";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +27,12 @@ export default function CartPage() {
   }, [fetchCart]);
 
   const handleQuantityChange = async (orderId, itemId, newQuantity) => {
-    if (newQuantity < 1) return;
+    if (!Number.isFinite(newQuantity)) return;
+
+    const fixed = Math.min(MAX_QUANTITY, Math.max(1, Math.round(newQuantity)));
 
     setUpdatingItemId(itemId);
-    await updateItemQuantity(orderId, itemId, newQuantity);
+    await updateItemQuantity(orderId, itemId, fixed);
     setUpdatingItemId(null);
   };
 
@@ -155,37 +158,14 @@ export default function CartPage() {
                             </div>
 
                             <div className="flex items-center justify-between sm:justify-end gap-3">
-                              <div className="flex items-center gap-1 rounded-lg border border-border/60 p-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 rounded-md"
-                                  disabled={
-                                    item.quantity <= 1 ||
-                                    updatingItemId === item.id ||
-                                    removingItemId === item.id
-                                  }
-                                  onClick={() => handleQuantityChange(order.id, item.id, item.quantity - 1)}
-                                >
-                                  <Minus className="h-3.5 w-3.5" />
-                                </Button>
-                                <span className="flex min-w-8 justify-center text-sm font-bold">
-                                  {updatingItemId === item.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                  ) : (
-                                    item.quantity
-                                  )}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 rounded-md"
-                                  disabled={updatingItemId === item.id || removingItemId === item.id}
-                                  onClick={() => handleQuantityChange(order.id, item.id, item.quantity + 1)}
-                                >
-                                  <Plus className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
+                              <QuantityInput
+                                value={item.quantity}
+                                max={MAX_QUANTITY}
+                                pending={updatingItemId === item.id}
+                                disabled={removingItemId === item.id}
+                                onChange={(q) => handleQuantityChange(order.id, item.id, q)}
+                                ariaLabel={t.cart?.quantityLabel}
+                              />
 
                               <Button
                                 variant="ghost"

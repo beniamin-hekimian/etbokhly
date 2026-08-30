@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export function useCart() {
+const CartContext = createContext(null);
+
+export function CartProvider({ children }) {
   const { t } = useTranslation();
   const [cartData, setCartData] = useState([]);
   const [cartTotal, setCartTotal] = useState(0);
@@ -72,8 +74,8 @@ export function useCart() {
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
-        toast.success(t.toast.addToCartSuccess);
-        return result;
+        const cartResult = await fetchCart();
+        return cartResult;
       } else {
         throw new Error(result.message || t.toast.addToCartError);
       }
@@ -246,7 +248,7 @@ export function useCart() {
     }
   }, [t]);
 
-  return {
+  const value = {
     cartData,
     cartTotal,
     checkoutData,
@@ -260,4 +262,16 @@ export function useCart() {
     loading,
     error,
   };
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+
+  return context;
+};

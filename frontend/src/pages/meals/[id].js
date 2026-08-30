@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
-import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingCart, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShoppingCart, Loader2 } from "lucide-react";
 
 import Loading from "@/components/loading";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import useMeals from "@/hooks/useMeals";
 import ChefSidebar from "@/components/meals/chef-sidebar";
 import FormattedDate from "@/components/meals/formatted-date";
+import { QuantityInput, MAX_QUANTITY } from "@/components/ui/quantity-input";
 
 export default function MealDetailsPage() {
   const router = useRouter();
@@ -30,18 +31,17 @@ export default function MealDetailsPage() {
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
-  const handleIncrement = () => setQuantity((prev) => prev + 1);
-  const handleDecrement = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       router.push("/auth/login");
       return;
     }
 
+    const finalQuantity = Math.min(MAX_QUANTITY, Math.max(1, Math.round(Number(quantity) || 1)));
+
     try {
       setIsAdding(true);
-      await addToCart(meal.id, quantity);
+      await addToCart(meal.id, finalQuantity);
     } catch (err) {
       console.error("Failed to add meal to cart:", err);
     } finally {
@@ -137,27 +137,12 @@ export default function MealDetailsPage() {
 
               {/* Add to Cart Actions */}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-1.5 rounded-lg border border-border/60 p-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-md"
-                    onClick={handleDecrement}
-                    disabled={quantity <= 1 || isAdding}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="min-w-10 text-center text-base font-bold">{quantity}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-md"
-                    onClick={handleIncrement}
-                    disabled={isAdding}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+                <QuantityInput
+                  value={quantity}
+                  onChange={setQuantity}
+                  disabled={isAdding}
+                  ariaLabel={t.cart?.quantityLabel}
+                />
 
                 <Button
                   size="lg"

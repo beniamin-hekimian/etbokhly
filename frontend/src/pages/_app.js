@@ -4,6 +4,7 @@ import Head from "next/head";
 import { Cairo, Tajawal } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/hooks/useCart";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -43,10 +44,12 @@ export default function App({ Component, pageProps }) {
 
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <AuthProvider>
-          <Navbar />
-          <Component {...pageProps} />
-          <Footer />
-          <Toaster richColors position="top-center" />
+          <CartProvider>
+            <Navbar />
+            <Component {...pageProps} />
+            <Footer />
+            <Toaster richColors position="top-center" />
+          </CartProvider>
         </AuthProvider>
       </ThemeProvider>
     </div>

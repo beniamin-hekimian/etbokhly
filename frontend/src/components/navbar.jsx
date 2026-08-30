@@ -86,7 +86,8 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [desktopAdminOpen]);
 
-  // Fetch cart on mount and whenever route finishes changing (e.g. returning from adding to cart)
+  // Fetch the cart on mount and whenever the user becomes authenticated.
+  // The cart badge is fed live by the shared CartProvider afterwards.
   useEffect(() => {
     if (isAuthenticated) {
       fetchCart();
@@ -96,9 +97,6 @@ export function Navbar() {
       setMenuOpen(false);
       setDesktopAdminOpen(false);
       setMobileAdminOpen(false);
-      if (isAuthenticated) {
-        fetchCart();
-      }
     };
 
     router.events.on("routeChangeComplete", handleRouteChange);
