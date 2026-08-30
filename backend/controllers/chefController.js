@@ -4,6 +4,7 @@ import appError from "../utils/appError.js";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { decorateMealLikes } from "../utils/mealLikes.js";
 
 const storage = multer.memoryStorage();
 
@@ -350,13 +351,21 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
           },
         },
       },
+
+      _count: {
+        select: { likes: true },
+      },
+
+      ...(req.user?.id
+        ? { likes: { where: { user_id: req.user.id }, select: { meal_id: true }, take: 1 } }
+        : {}),
     },
   }), pagination ? prisma.meal.count({ where: mealsWhere }) : Promise.resolve(null)]);
 
   const response = {
     status: "success",
     data: chef,
-    meals,
+    meals: decorateMealLikes(meals),
   };
   if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, mealsTotal);
   res.status(200).json(response);

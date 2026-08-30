@@ -6,7 +6,7 @@ import * as authController from '../controllers/authController'
 const router = express.Router();
 
 // Public route - no auth required
-router.get("/profile/:id", chefController.getPublicChefProfile);
+router.get("/profile/:id", authController.optionalProtect, chefController.getPublicChefProfile);
 
 router.use(authController.protect);
 

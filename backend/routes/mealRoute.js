@@ -10,7 +10,7 @@ import {
 } from "../controllers/authController.js";
 
 const router = express.Router();
-router.route("/").get(mealController.getAllMeals);
+router.route("/").get(optionalProtect, mealController.getAllMeals);
 router.route("/:id").get(optionalProtect, mealController.getMeal)
 /*
 router.use(protect);

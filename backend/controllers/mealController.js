@@ -4,6 +4,7 @@ import appError from "../utils/appError.js";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { decorateMealLikes } from "../utils/mealLikes.js";
 
 
 // =========================
@@ -93,12 +94,20 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
 
       mealRequestStatus: true,
       mealRequestRejectReason: true,
+
+      _count: {
+        select: { likes: true },
+      },
+
+      ...(req.user?.id
+        ? { likes: { where: { user_id: req.user.id }, select: { meal_id: true }, take: 1 } }
+        : {}),
     },
   }), pagination ? prisma.meal.count({ where }) : Promise.resolve(null)]);
 
   const response = {
     status: "success",
-    data: meals,
+    data: decorateMealLikes(meals),
   };
   if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
   res.status(200).json(response);
@@ -151,8 +160,16 @@ export const getMeal = catchAsync(async (req, res, next) => {
 
       mealRequestStatus: true,
       mealRequestRejectReason: true,
+
+      _count: {
+        select: { likes: true },
+      },
+
+      ...(req.user?.id
+        ? { likes: { where: { user_id: req.user.id }, select: { meal_id: true }, take: 1 } }
+        : {}),
     },
-    
+
   });
 
   if (!meal) {
@@ -165,7 +182,7 @@ export const getMeal = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
-    data: meal,
+    data: decorateMealLikes(meal),
   });
 });
 

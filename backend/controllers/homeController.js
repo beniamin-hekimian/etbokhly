@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import catchAsync from "../utils/catchAsync.js";
+import { decorateMealLikes } from "../utils/mealLikes.js";
 
 export const getHomeData = catchAsync(async (req, res, next) => {
   const [meals, chefs] = await Promise.all([
@@ -36,6 +37,14 @@ export const getHomeData = catchAsync(async (req, res, next) => {
             },
           },
         },
+
+        _count: {
+          select: { likes: true },
+        },
+
+        ...(req.user?.id
+          ? { likes: { where: { user_id: req.user.id }, select: { meal_id: true }, take: 1 } }
+          : {}),
       },
     }),
     prisma.user.findMany({
@@ -60,7 +69,7 @@ export const getHomeData = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: {
-      meals,
+      meals: decorateMealLikes(meals),
       chefs,
     },
   });
