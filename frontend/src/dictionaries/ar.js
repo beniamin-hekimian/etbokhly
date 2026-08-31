@@ -482,6 +482,11 @@ export const ar = {
     contactDetails: "التواصل والتفاصيل",
     joined: "انضم",
   },
+  rating: {
+    label: "التقييم",
+    rate: "قيّم",
+    clear: "مسح",
+  },
   cart: {
     metaTitle: "سلة التسوق | اطبخلي",
     title: "محتويات السلة",
@@ -645,6 +650,9 @@ export const ar = {
     unfollowError: "تعذر إلغاء متابعة هذا الطاهي، يرجى المحاولة لاحقاً.",
     followLoadError: "فشل تحميل القائمة",
     followLoadCatch: "حدث خطأ أثناء تحميل القائمة",
+    ratingSaved: "تم حفظ تقييمك بنجاح",
+    ratingRemoved: "تم حذف التقييم",
+    ratingError: "تعذر إرسال تقييمك. يرجى المحاولة لاحقاً",
     checkoutSummaryError: "فشل تحميل ملخص الطلب",
     checkoutSummaryCatch: "حدث خطأ أثناء تحميل ملخص الطلب",
     checkoutSuccess: "تم تأكيد طلبك بنجاح!",

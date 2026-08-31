@@ -1,9 +1,11 @@
 import Image from "next/image";
-import { ChefHat, Mail, MapPin, Phone } from "lucide-react";
+import { ChefHat, Mail, MapPin, Phone, Star, Users, Utensils } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/context/AuthContext";
 import FollowButton from "@/components/meals/follow-button";
+import ChefRatingInput from "@/components/chefs/chef-rating-input";
+import { useRating } from "@/hooks/useRating";
 
 const DEFAULT_GRADIENT = "from-[#FFD59E] to-primary";
 
@@ -13,6 +15,15 @@ export default function ChefPublicProfile({ chef, mealsCount = 0 }) {
 
   const isOwnProfile = isAuthenticated && viewer?.id === chef?.id;
   const avatarSrc = chef?.profile_image?.trim() ? chef.profile_image : "/avatar.webp";
+
+  const { myScore, avgRating, submit, remove, isSubmitting } = useRating({
+    chefId: chef?.id,
+    initialMyScore: chef?.myRating,
+    initialAvgRating: chef?.avgRating,
+    initialRatingCount: chef?.ratingCount,
+  });
+
+  const showRatingInput = !isOwnProfile && isAuthenticated;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -65,29 +76,50 @@ export default function ChefPublicProfile({ chef, mealsCount = 0 }) {
         {/* Stats + follow row */}
         <div className="mt-5 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-5 sm:flex-row">
           <div className="flex items-center justify-center gap-10 sm:justify-start">
-            <div className="text-center sm:text-start">
-              <p className="text-2xl font-extrabold text-foreground">{mealsCount}</p>
+            <div className="text-center">
+              <p className="inline-flex items-center justify-center gap-1.5 text-2xl font-extrabold text-foreground">
+                <Utensils className="h-5 w-5 text-muted-foreground" />
+                {mealsCount}
+              </p>
               <p className="text-sm text-muted-foreground">{t.follows.mealsLabel}</p>
             </div>
-            <div className="text-center sm:text-start">
-              <p className="text-2xl font-extrabold text-foreground">{chef?.followingCount ?? 0}</p>
-              <p className="text-sm text-muted-foreground">{t.follows.followingLabel}</p>
-            </div>
-            <div className="text-center sm:text-start">
-              <p className="text-2xl font-extrabold text-foreground">{chef?.followersCount ?? 0}</p>
+            <div className="text-center">
+              <p className="inline-flex items-center justify-center gap-1.5 text-2xl font-extrabold text-foreground">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                {chef?.followersCount ?? 0}
+              </p>
               <p className="text-sm text-muted-foreground">{t.follows.followers}</p>
+            </div>
+            <div className="text-center">
+              <p className="inline-flex items-center justify-center gap-1.5 text-2xl font-extrabold text-foreground">
+                <Star className="h-5 w-5 text-muted-foreground" />
+                {avgRating == null || avgRating === 0 ? "0" : avgRating.toFixed(1)}
+              </p>
+              <p className="text-sm text-muted-foreground">{t.rating.label}</p>
             </div>
           </div>
 
-          {!isOwnProfile && (
-            <FollowButton
-              chefId={chef?.id}
-              initialFollowing={chef?.isFollowing}
-              initialCount={chef?.followersCount}
-              size="md"
-              className="shrink-0"
-            />
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
+            {showRatingInput && (
+              <ChefRatingInput
+                value={myScore ?? 0}
+                onChange={submit}
+                onRemove={remove}
+                submitting={isSubmitting}
+                canClear={Boolean(myScore)}
+              />
+            )}
+
+            {!isOwnProfile && (
+              <FollowButton
+                chefId={chef?.id}
+                initialFollowing={chef?.isFollowing}
+                initialCount={chef?.followersCount}
+                size="md"
+                className="shrink-0"
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

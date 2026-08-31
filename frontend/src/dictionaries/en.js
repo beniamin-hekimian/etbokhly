@@ -482,6 +482,11 @@ export const en = {
     contactDetails: "Contact & Details",
     joined: "Joined",
   },
+  rating: {
+    label: "Rating",
+    rate: "Rate",
+    clear: "Clear",
+  },
   cart: {
     metaTitle: "Cart | Etbokhly",
     title: "Cart Items",
@@ -645,6 +650,9 @@ export const en = {
     unfollowError: "Could not unfollow this chef. Please try again later.",
     followLoadError: "Failed to load the list",
     followLoadCatch: "An error occurred while loading the list",
+    ratingSaved: "Rating saved successfully",
+    ratingRemoved: "Rating removed",
+    ratingError: "Could not submit your rating. Please try again later.",
     checkoutSummaryError: "Failed to load order summary",
     checkoutSummaryCatch: "An error occurred while loading order summary",
     checkoutSuccess: "Your order has been confirmed!",

@@ -76,6 +76,9 @@ model User {
   following Follow[] @relation("Follower")
   followers Follow[] @relation("Following")
 
+  ratingsGiven    Rating[] @relation("RatedBy")
+  ratingsReceived Rating[] @relation("ChefRatings")
+
   @@map("users")
 }
 
@@ -234,4 +237,20 @@ model Follow {
   @@index([followerId])
   @@index([followingId])
   @@map("follows")
+}
+
+model Rating {
+  raterId String @db.Uuid
+  chefId  String @db.Uuid
+  score   Int    @db.SmallInt
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  rater User @relation("RatedBy", fields: [raterId], references: [id], onDelete: Cascade)
+  chef  User @relation("ChefRatings", fields: [chefId], references: [id], onDelete: Cascade)
+
+  @@id([raterId, chefId])
+  @@index([chefId])
+  @@map("ratings")
 }

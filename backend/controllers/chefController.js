@@ -324,11 +324,25 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
       createdAt: true,
 
       _count: {
-        select: { following: true, followers: true },
+        select: {
+          following: true,
+          followers: true,
+          ratingsReceived: true,
+        },
       },
 
       ...(req.user?.id
         ? { followers: { where: { followerId: req.user.id }, select: { followerId: true }, take: 1 } }
+        : {}),
+
+      ...(req.user?.id
+        ? {
+            ratingsReceived: {
+              where: { raterId: req.user.id },
+              select: { score: true },
+              take: 1,
+            },
+          }
         : {}),
     },
   });
@@ -337,40 +351,49 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
     return next(new appError("Chef not found!", 404));
   }
 
-  const { _count, followers, ...chefRest } = chef;
+  const { _count, followers, ratingsReceived, ...chefRest } = chef;
 
   const pagination = getPagination(req);
   const mealsWhere = { user_id: id, mealRequestStatus: "APPROVED" };
   const mealsQuery = { where: mealsWhere, orderBy: { createdAt: "desc" } };
   if (pagination) { mealsQuery.skip = pagination.skip; mealsQuery.take = pagination.limit; }
-  const [meals, mealsTotal] = await Promise.all([prisma.meal.findMany({ ...mealsQuery,
-    select: {
-      id: true,
-      title: true,
-      photo: true,
-      price: true,
-      content: true,
-      createdAt: true,
-      tags: {
-        select: {
-          tag: {
-            select: {
-              id: true,
-              name: true,
+  const [meals, mealsTotal, ratingAgg] = await Promise.all([
+    prisma.meal.findMany({
+      ...mealsQuery,
+      select: {
+        id: true,
+        title: true,
+        photo: true,
+        price: true,
+        content: true,
+        createdAt: true,
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
             },
           },
         },
-      },
 
-      _count: {
-        select: { likes: true },
-      },
+        _count: {
+          select: { likes: true },
+        },
 
-      ...(req.user?.id
-        ? { likes: { where: { user_id: req.user.id }, select: { meal_id: true }, take: 1 } }
-        : {}),
-    },
-  }), pagination ? prisma.meal.count({ where: mealsWhere }) : Promise.resolve(null)]);
+        ...(req.user?.id
+          ? { likes: { where: { user_id: req.user.id }, select: { meal_id: true }, take: 1 } }
+          : {}),
+      },
+    }),
+    pagination ? prisma.meal.count({ where: mealsWhere }) : Promise.resolve(null),
+    prisma.rating.aggregate({
+      where: { chefId: id },
+      _avg: { score: true },
+      _count: true,
+    }),
+  ]);
 
   const response = {
     status: "success",
@@ -379,6 +402,12 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
       followingCount: _count?.following ?? 0,
       followersCount: _count?.followers ?? 0,
       isFollowing: Boolean(followers && followers.length > 0),
+      avgRating:
+        ratingAgg?._avg?.score != null
+          ? Math.round(ratingAgg._avg.score * 10) / 10
+          : 0,
+      ratingCount: ratingAgg?._count ?? 0,
+      myRating: ratingsReceived?.[0]?.score ?? null,
     },
     meals: decorateMealLikes(meals),
   };

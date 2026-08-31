@@ -29,6 +29,7 @@ import chefRoute from "./routes/chefRoute.js"
 import homeRoute from "./routes/homeRoute.js"
 import likeRoute from "./routes/likeRoute.js"
 import followRoute from "./routes/followRoute.js"
+import ratingRoute from "./routes/ratingRoute.js"
 //import orderRoute from './routes/orderRoute.js'
 //import { prisma } from "./lib/prisma"
 const PORT = process.env.PORT || 3000;
@@ -45,6 +46,7 @@ app.use("/chef",chefRoute)
 app.use("/home",homeRoute)
 app.use("/like",likeRoute)
 app.use("/follow",followRoute)
+app.use("/rating",ratingRoute)
 app.use("/api/v1/home",homeRoute)
 app.listen(PORT, () =>
 {
