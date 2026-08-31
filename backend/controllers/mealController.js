@@ -60,6 +60,21 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
 export const getAllMeals = catchAsync(async (req, res, next) => {
   const pagination = getPagination(req);
   const where = { mealRequestStatus: "APPROVED" };
+
+  const q = req.query.q;
+  if (q && String(q).trim()) {
+    const term = String(q).trim();
+    where.OR = [
+      { title: { contains: term, mode: "insensitive" } },
+      { content: { contains: term, mode: "insensitive" } },
+    ];
+  }
+
+  const tag = req.query.tag;
+  if (tag && String(tag).trim()) {
+    where.tags = { some: { tag: { name: String(tag).trim() } } };
+  }
+
   const query = { where, orderBy: { createdAt: "desc" } };
   if (pagination) { query.skip = pagination.skip; query.take = pagination.limit; }
   const [meals, total] = await Promise.all([prisma.meal.findMany({ ...query,
@@ -111,6 +126,22 @@ export const getAllMeals = catchAsync(async (req, res, next) => {
   };
   if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, total);
   res.status(200).json(response);
+});
+// =========================
+// Get Tags of Approved Meals
+// =========================
+export const getMealTags = catchAsync(async (req, res, next) => {
+  const tags = await prisma.tag.findMany({
+    where: {
+      meals: { some: { meal: { mealRequestStatus: "APPROVED" } } },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: tags,
+  });
 });
 // =========================
 // Get Single Meal

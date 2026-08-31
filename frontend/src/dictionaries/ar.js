@@ -410,6 +410,8 @@ export const ar = {
     clearSearch: "مسح البحث",
     allTags: "الكل",
     filterByTag: "تصفية حسب الوسم",
+    prevPage: "السابق",
+    nextPage: "التالي",
     card: {
       noDescription: "لا يوجد وصف محدد.",
       unknownChef: "طباخ غير معروف",

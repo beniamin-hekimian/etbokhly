@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
 
-// Hook for fetching all meals or single meal details
-export default function useMeals(id = null) {
+const PAGE_SIZE = 9;
+
+function buildUrl(id, q, tag, page) {
+  if (id) {
+    return `/api/meal/${id}`;
+  }
+
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("limit", String(PAGE_SIZE));
+  if (q) params.set("q", q);
+  if (tag) params.set("tag", tag);
+  return `/api/meal?${params.toString()}`;
+}
+
+// Hook for fetching a single meal (when id given) or a paginated,
+// server-filtered list of meals (otherwise).
+export default function useMeals(id = null, { query = "", tag = "" } = {}) {
   const [meals, setMeals] = useState([]);
   const [meal, setMeal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState(null);
 
   useEffect(
     function () {
@@ -19,28 +37,8 @@ export default function useMeals(id = null) {
           const token = localStorage.getItem("token");
           const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-          // Single meal fetch
-          if (id) {
-            const response = await fetch(`/api/meal/${id}`, { headers });
-
-            if (!response.ok) {
-              throw new Error(`HTTP error ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.status !== "success") {
-              throw new Error(result.message || "Failed to load meal details.");
-            }
-
-            if (!cancelled) {
-              setMeal(result.data);
-            }
-            return;
-          }
-
-          // All meals fetch
-          const response = await fetch("/api/meal", { headers });
+          const url = buildUrl(id, query, tag, page);
+          const response = await fetch(url, { headers });
 
           if (!response.ok) {
             throw new Error(`HTTP error ${response.status}`);
@@ -52,18 +50,13 @@ export default function useMeals(id = null) {
             throw new Error(result.message || "Failed to load meals.");
           }
 
-          const mealList = Array.isArray(result.data) ? result.data : [];
-
-          const approvedMeals = mealList.filter(function (item) {
-            return item.mealRequestStatus === "APPROVED";
-          });
-
-          const sortedMeals = [...approvedMeals].sort(function (a, b) {
-            return new Date(b.createdAt) - new Date(a.createdAt);
-          });
-
           if (!cancelled) {
-            setMeals(sortedMeals);
+            if (id) {
+              setMeal(result.data);
+            } else {
+              setMeals(Array.isArray(result.data) ? result.data : []);
+              setMeta(result.meta || null);
+            }
           }
         } catch (err) {
           console.error("Failed to fetch meal data:", err);
@@ -84,7 +77,7 @@ export default function useMeals(id = null) {
         cancelled = true;
       };
     },
-    [id],
+    [id, query, tag, page],
   );
 
   return {
@@ -92,5 +85,8 @@ export default function useMeals(id = null) {
     meal,
     isLoading,
     error,
+    page,
+    setPage,
+    meta,
   };
 }

@@ -410,6 +410,8 @@ export const en = {
     clearSearch: "Clear search",
     allTags: "All",
     filterByTag: "Filter by tag",
+    prevPage: "Previous",
+    nextPage: "Next",
     card: {
       noDescription: "No description provided.",
       unknownChef: "Unknown Chef",

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { Search, X } from "lucide-react";
@@ -11,9 +11,8 @@ import useMeals from "@/hooks/useMeals";
 import MealCard from "@/components/meals/meal-card";
 
 export default function MealsPage() {
-  const { meals, isLoading, error } = useMeals();
-  const { t } = useTranslation();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Derive active filters from URL (source of truth)
   const activeQuery = (router.isReady ? (router.query.q || "") : "").trim();
@@ -27,56 +26,77 @@ export default function MealsPage() {
   }
   const searchQuery = inputState.value;
 
-  // Extract unique tags from meals
-  const allTags = useMemo(() => {
-    const tagMap = new Map();
-    meals.forEach((meal) => {
-      meal.tags?.forEach((item) => {
-        if (item.tag?.id && item.tag?.name && !tagMap.has(item.tag.id)) {
-          tagMap.set(item.tag.id, item.tag);
+  const { meals, isLoading, error, page, setPage, meta } = useMeals(null, {
+    query: activeQuery,
+    tag: activeTag,
+  });
+
+  const totalPages = meta?.totalPages || 1;
+  const hasPrev = (meta?.page || 1) > 1;
+  const hasNext = (meta?.page || 1) < totalPages;
+  const totalResults = meta?.total ?? meals.length;
+
+  // Tag chips — only tags that appear on approved meals (fetched once)
+  const [allTags, setAllTags] = useState([]);
+  useEffect(
+    function () {
+      let cancelled = false;
+
+      async function loadTags() {
+        try {
+          const response = await fetch("/api/meal/tags");
+          const result = await response.json();
+          if (!cancelled && result?.status === "success") {
+            setAllTags(Array.isArray(result.data) ? result.data : []);
+          }
+        } catch (err) {
+          console.error("Failed to load meal tags:", err);
         }
-      });
-    });
-    return Array.from(tagMap.values());
-  }, [meals]);
+      }
 
-  // Filter meals by active search query AND active tag
-  const filteredMeals = useMemo(() => {
-    return meals.filter((meal) => {
-      const matchesSearch =
-        !activeQuery ||
-        meal.title?.toLowerCase().includes(activeQuery.toLowerCase()) ||
-        meal.content?.toLowerCase().includes(activeQuery.toLowerCase());
+      loadTags();
+      return function () {
+        cancelled = true;
+      };
+    },
+    [],
+  );
 
-      const matchesTag =
-        !activeTag ||
-        meal.tags?.some((item) => item.tag?.name === activeTag);
-
-      return matchesSearch && matchesTag;
-    });
-  }, [meals, activeQuery, activeTag]);
-
-  const pushURL = (q, tag) => {
+  const pushURL = (q, tag, nextPage) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (tag) params.set("tag", tag);
+    if (nextPage && nextPage !== 1 && !q && !tag) {
+      params.set("page", String(nextPage));
+    }
     const qs = params.toString();
     router.push(qs ? `/meals?${qs}` : "/meals", undefined, { shallow: true });
   };
 
+  const resetPageAndPush = (q, tag) => {
+    setPage(1);
+    pushURL(q, tag, 1);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    pushURL(searchQuery.trim(), activeTag);
+    resetPageAndPush(searchQuery.trim(), activeTag);
   };
 
   const handleTagClick = (tagName) => {
     const next = activeTag === tagName ? "" : tagName;
-    pushURL(searchQuery.trim(), next);
+    resetPageAndPush(searchQuery.trim(), next);
   };
 
   const clearSearch = () => {
     setInputState({ urlKey: "__none__", value: "" });
+    setPage(1);
     router.push("/meals", undefined, { shallow: true });
+  };
+
+  const goToPage = (nextPage) => {
+    setPage(nextPage);
+    pushURL(activeQuery, activeTag, nextPage);
   };
 
   const hasActiveFilter = activeQuery || activeTag;
@@ -135,7 +155,7 @@ export default function MealsPage() {
                 type="button"
                 onClick={() => {
                   setInputState({ urlKey: "__none__", value: "" });
-                  pushURL("", activeTag);
+                  resetPageAndPush("", activeTag);
                 }}
                 className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -196,8 +216,8 @@ export default function MealsPage() {
                   {t.meals.filterByTag}: {activeTag}
                 </>
               )}
-              {" — "}{filteredMeals.length}{" "}
-              {filteredMeals.length === 1 ? "result" : "results"}
+              {" - "}{totalResults}{" "}
+              {totalResults === 1 ? "result" : "results"}
             </p>
             <Button variant="ghost" size="sm" onClick={clearSearch} className="text-xs font-bold text-primary">
               {t.meals.clearSearch}
@@ -206,7 +226,7 @@ export default function MealsPage() {
         )}
 
         {/* Meals Grid */}
-        {filteredMeals.length === 0 ? (
+        {meals.length === 0 ? (
           <Card className="border-border/60 bg-card shadow-sm">
             <CardContent className="flex min-h-40 flex-col items-center justify-center gap-2 p-6">
               <p className="text-sm text-muted-foreground">
@@ -220,11 +240,27 @@ export default function MealsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMeals.map((meal) => (
-              <MealCard key={meal.id} meal={meal} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {meals.map((meal) => (
+                <MealCard key={meal.id} meal={meal} />
+              ))}
+            </div>
+
+            {(hasPrev || hasNext) && (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Button variant="outline" disabled={!hasPrev} onClick={() => goToPage(page - 1)}>
+                  {t.meals.prevPage}
+                </Button>
+                <span className="text-sm font-bold text-muted-foreground">
+                  {meta.page} / {totalPages}
+                </span>
+                <Button variant="outline" disabled={!hasNext} onClick={() => goToPage(page + 1)}>
+                  {t.meals.nextPage}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </>

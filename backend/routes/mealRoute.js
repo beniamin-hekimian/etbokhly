@@ -11,6 +11,7 @@ import {
 
 const router = express.Router();
 router.route("/").get(optionalProtect, mealController.getAllMeals);
+router.route("/tags").get(optionalProtect, mealController.getMealTags);
 router.route("/:id").get(optionalProtect, mealController.getMeal)
 /*
 router.use(protect);
