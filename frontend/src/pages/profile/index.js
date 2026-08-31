@@ -57,7 +57,7 @@ export default function ProfilePage() {
         <ProfileRoleBanner role={profile.role} />
 
         {/* Page header title & buttons */}
-        <ProfileHeader role={profile.role} chefRequestStatus={chefRequestStatus} />
+        <ProfileHeader role={profile.role} chefRequestStatus={chefRequestStatus} userId={profile.id} />
 
         {/* Profile Info Card */}
         <ProfileInfoCard profile={profile} />

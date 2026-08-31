@@ -2,11 +2,14 @@ import express from "express";
 
 import * as mealController from "../controllers/mealController.js";
 import * as chefController from "../controllers/chefController.js"
+import * as followController from "../controllers/followController.js"
 import * as authController from '../controllers/authController'
 const router = express.Router();
 
-// Public route - no auth required
+// Public routes - no auth required
 router.get("/profile/:id", authController.optionalProtect, chefController.getPublicChefProfile);
+router.get("/profile/:id/followers", authController.optionalProtect, followController.getChefFollowers);
+router.get("/profile/:id/following", authController.optionalProtect, followController.getChefFollowing);
 
 router.use(authController.protect);
 

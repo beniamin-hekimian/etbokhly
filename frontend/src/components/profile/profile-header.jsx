@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Circle, Heart } from "lucide-react";
+import { Circle, Eye, Heart, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export default function ProfileHeader({ role, chefRequestStatus }) {
+export default function ProfileHeader({ role, chefRequestStatus, userId }) {
   const { t } = useTranslation();
 
   const isChefRequestPending = chefRequestStatus === "PENDING";
@@ -33,6 +33,22 @@ export default function ProfileHeader({ role, chefRequestStatus }) {
               {t.profile.myLikes}
             </Button>
           </Link>
+
+          <Link href="/profile/following">
+            <Button variant="outline" className="gap-2 font-bold">
+              <Users className="h-4 w-4" />
+              {t.profile.myFollowing}
+            </Button>
+          </Link>
+
+          {role === "CHEF" && userId && (
+            <Link href={`/chef/${userId}`}>
+              <Button variant="outline" className="gap-2 font-bold">
+                <Eye className="h-4 w-4" />
+                {t.profile.viewPublicProfile}
+              </Button>
+            </Link>
+          )}
         </div>
 
         {role === "CUSTOMER" && (

@@ -8,7 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 import Loading from "@/components/loading";
 import Error from "@/components/error";
-import ProfileInfoCard from "@/components/profile/profile-info-card";
+import ChefPublicProfile from "@/components/chefs/chef-public-profile";
 import ChefPublicMeals from "@/components/chefs/chef-public-meals";
 
 export default function ChefProfilePage() {
@@ -56,16 +56,15 @@ export default function ChefProfilePage() {
         </div>
 
         {/* Chef Info Card */}
-        <ProfileInfoCard profile={chef} />
+        <ChefPublicProfile chef={chef} mealsCount={meals.length} />
 
         {/* Chef Meals */}
-        <div className="space-y-6 pt-4">
+        <section className="space-y-6 pt-2">
           <h2 className="text-2xl font-extrabold text-foreground sm:text-3xl md:text-4xl">
             {t.chefProfile.mealsTitle}
           </h2>
-
           <ChefPublicMeals meals={meals} />
-        </div>
+        </section>
       </div>
     </div>
   );

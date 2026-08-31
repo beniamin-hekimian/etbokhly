@@ -322,12 +322,22 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
       location: true,
       role: true,
       createdAt: true,
+
+      _count: {
+        select: { following: true, followers: true },
+      },
+
+      ...(req.user?.id
+        ? { followers: { where: { followerId: req.user.id }, select: { followerId: true }, take: 1 } }
+        : {}),
     },
   });
 
   if (!chef) {
     return next(new appError("Chef not found!", 404));
   }
+
+  const { _count, followers, ...chefRest } = chef;
 
   const pagination = getPagination(req);
   const mealsWhere = { user_id: id, mealRequestStatus: "APPROVED" };
@@ -364,7 +374,12 @@ export const getPublicChefProfile = catchAsync(async (req, res, next) => {
 
   const response = {
     status: "success",
-    data: chef,
+    data: {
+      ...chefRest,
+      followingCount: _count?.following ?? 0,
+      followersCount: _count?.followers ?? 0,
+      isFollowing: Boolean(followers && followers.length > 0),
+    },
     meals: decorateMealLikes(meals),
   };
   if (pagination) response.meta = paginationMeta(pagination.page, pagination.limit, mealsTotal);
