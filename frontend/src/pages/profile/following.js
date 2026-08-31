@@ -84,9 +84,9 @@ export default function MyFollowingPage() {
                 <h3 className="font-bold text-foreground">{t.follows.emptyFollowingTitle}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t.follows.emptyFollowingDescription}</p>
               </div>
-              <Button asChild className="font-bold">
-                <Link href="/meals">{t.follows.discoverChefs}</Link>
-              </Button>
+              <Link href="/meals">
+                <Button className="font-bold">{t.follows.discoverChefs}</Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (

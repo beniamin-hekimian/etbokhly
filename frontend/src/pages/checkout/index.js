@@ -57,12 +57,12 @@ export default function CheckoutPage() {
             </div>
             <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">{t.checkout?.orderConfirmed}</h1>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button asChild size="lg" className="font-bold">
-                <Link href="/orders">{t.checkout?.viewMyOrders}</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="font-bold">
-                <Link href="/meals">{t.checkout?.continueShopping}</Link>
-              </Button>
+              <Link href="/orders">
+                <Button size="lg" className="font-bold">{t.checkout?.viewMyOrders}</Button>
+              </Link>
+              <Link href="/meals">
+                <Button variant="outline" size="lg" className="font-bold">{t.checkout?.continueShopping}</Button>
+              </Link>
             </div>
           </div>
         </section>
@@ -84,12 +84,12 @@ export default function CheckoutPage() {
             <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">{t.checkout?.emptyTitle}</h1>
             <p className="mt-3 text-muted-foreground">{t.checkout?.emptyDescription}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button asChild size="lg" className="font-bold">
-                <Link href="/cart">{t.checkout?.backToCart}</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="font-bold">
-                <Link href="/meals">{t.checkout?.continueShopping}</Link>
-              </Button>
+              <Link href="/cart">
+                <Button size="lg" className="font-bold">{t.checkout?.backToCart}</Button>
+              </Link>
+              <Link href="/meals">
+                <Button variant="outline" size="lg" className="font-bold">{t.checkout?.continueShopping}</Button>
+              </Link>
             </div>
           </div>
         </section>
@@ -114,12 +114,12 @@ export default function CheckoutPage() {
                 <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl md:text-4xl">{t.checkout?.title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t.checkout?.description}</p>
               </div>
-              <Button asChild variant="outline" size="sm" className="w-fit">
-                <Link href="/cart" className="flex items-center gap-2 font-bold">
+              <Link href="/cart">
+                <Button variant="outline" size="sm" className="w-fit">
                   <ArrowRight className="h-4 w-4" />
                   {t.checkout?.backToCart}
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -154,6 +154,7 @@ export default function CheckoutPage() {
                               src={item.meal?.photo || "/placeholder.webp"}
                               alt={item.mealName}
                               fill
+                              sizes="80px"
                               className="object-cover"
                             />
                           </div>

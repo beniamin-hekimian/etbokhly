@@ -84,9 +84,9 @@ export default function MyLikesPage() {
                 <h3 className="font-bold text-foreground">{t.likes.emptyTitle}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t.likes.emptyDescription}</p>
               </div>
-              <Button asChild className="font-bold">
-                <Link href="/meals">{t.likes.browseMeals}</Link>
-              </Button>
+              <Link href="/meals">
+                <Button className="font-bold">{t.likes.browseMeals}</Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (

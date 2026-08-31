@@ -38,6 +38,7 @@ export default function ChefPublicProfile({ chef, mealsCount = 0 }) {
               alt={chef?.full_name || "chef"}
               width={120}
               height={120}
+              priority
               className="h-full w-full rounded-full border-2 border-card object-cover"
             />
           </div>

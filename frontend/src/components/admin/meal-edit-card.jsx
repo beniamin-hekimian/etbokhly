@@ -66,7 +66,7 @@ export default function MealEditCard({ meal, tagNameById, actionLoading, onAppro
     <Card className="flex flex-col sm:flex-row gap-0 overflow-hidden border border-amber-500/30 bg-card shadow-sm py-0">
       {/* Left side current photo */}
       <div className="relative h-48 sm:h-auto sm:w-64 shrink-0 bg-muted/40 border-b sm:border-b-0 sm:border-r border-border/60">
-        <Link href={`/meals/${meal.id}`} className="block h-full w-full">
+        <Link href={`/meals/${meal.id}`} className="relative block h-full w-full">
           <Image
             src={mealPhotoSrc}
             alt={meal.title}

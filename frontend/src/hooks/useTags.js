@@ -20,6 +20,13 @@ export default function useTags({ setValue, selectedTags = [] }) {
 
         const token = localStorage.getItem("token");
 
+        // /api/tag is a protected endpoint; skip the request when signed out
+        // to avoid sending a malformed/empty Bearer token to the backend.
+        if (!token) {
+          if (!cancelled) setTags([]);
+          return;
+        }
+
         const response = await fetch("/api/tag", {
           method: "GET",
           headers: {

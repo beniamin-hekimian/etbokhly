@@ -111,6 +111,7 @@ export default function OrderCard({ order, showChef = true, showCustomer = false
                 src={item.meal?.photo || "/placeholder.webp"}
                 alt={item.mealName}
                 fill
+                sizes="64px"
                 className="object-cover"
               />
             </div>

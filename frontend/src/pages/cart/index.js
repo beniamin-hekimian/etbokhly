@@ -60,9 +60,9 @@ export default function CartPage() {
             <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">{t.cart?.emptyTitle}</h1>
             <p className="mt-3 text-muted-foreground">{t.cart?.emptyDescription}</p>
             <div className="mt-8">
-              <Button asChild size="lg" className="font-bold">
-                <Link href="/meals">{t.cart?.browseMeals}</Link>
-              </Button>
+              <Link href="/meals">
+                <Button size="lg" className="font-bold">{t.cart?.browseMeals}</Button>
+              </Link>
             </div>
           </div>
         </section>
@@ -86,12 +86,12 @@ export default function CartPage() {
                 </span>
                 <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl md:text-4xl">{t.cart?.title}</h1>
               </div>
-              <Button asChild variant="outline" size="sm" className="w-fit">
-                <Link href="/meals" className="flex items-center gap-2 font-bold">
+              <Link href="/meals">
+                <Button variant="outline" size="sm" className="w-fit">
                   <ArrowRight className="h-4 w-4" />
                   {t.cart?.continueShopping}
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -140,6 +140,7 @@ export default function CartPage() {
                               src={item.meal?.photo || "/placeholder.webp"}
                               alt={item.mealName}
                               fill
+                              sizes="80px"
                               className="object-cover"
                             />
                           </div>

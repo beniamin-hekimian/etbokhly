@@ -176,7 +176,7 @@ export default function ChefMealsGrid() {
                 >
                   {/* Visual Image Header */}
                   <div className="relative h-47.5 w-full overflow-hidden bg-muted">
-                    <Link href={`/meals/${meal.id}`} className="block h-full w-full">
+                    <Link href={`/meals/${meal.id}`} className="relative block h-full w-full">
                       <Image
                         src={mealPhotoSrc}
                         alt={meal.title}

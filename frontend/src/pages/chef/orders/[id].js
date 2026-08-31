@@ -72,9 +72,9 @@ export default function ChefOrderDetailPage() {
           <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">{t.chefOrders?.detail?.title}</h1>
           <p className="mt-3 text-muted-foreground">{error || t.chefOrders?.emptyTitle}</p>
           <div className="mt-8">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/chef/orders">{t.chefOrders?.detail?.backToOrders}</Link>
-            </Button>
+            <Link href="/chef/orders">
+              <Button size="lg" className="font-bold">{t.chefOrders?.detail?.backToOrders}</Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -97,12 +97,12 @@ export default function ChefOrderDetailPage() {
                 <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl md:text-4xl">{t.chefOrders?.detail?.title}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">{t.chefOrders?.orderId}{order.id?.slice(0, 8)}</p>
               </div>
-              <Button asChild variant="outline" size="sm" className="w-fit">
-                <Link href="/chef/orders" className="flex items-center gap-2 font-bold">
+              <Link href="/chef/orders">
+                <Button variant="outline" size="sm" className="w-fit">
                   <ArrowRight className="h-4 w-4" />
                   {t.chefOrders?.detail?.backToOrders}
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -176,6 +176,7 @@ export default function ChefOrderDetailPage() {
                             src={item.meal?.photo || "/placeholder.webp"}
                             alt={item.mealName}
                             fill
+                            sizes="64px"
                             className="object-cover"
                           />
                         </div>

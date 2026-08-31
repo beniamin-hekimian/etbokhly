@@ -84,9 +84,9 @@ export default function OrdersPage() {
                     <h3 className="font-bold text-foreground">{t.orders?.emptyTitle}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{t.orders?.emptyDescription}</p>
                   </div>
-                  <Button asChild className="font-bold">
-                    <Link href="/meals">{t.orders?.browseMeals}</Link>
-                  </Button>
+                  <Link href="/meals">
+                    <Button className="font-bold">{t.orders?.browseMeals}</Button>
+                  </Link>
                 </CardContent>
               </Card>
             ) : (
