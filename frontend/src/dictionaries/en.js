@@ -29,7 +29,7 @@ export const en = {
     },
     chips: {
       rating: "⭐ 4.9 Rating",
-      delivery: "🛵 Delivery in 25 mins",
+      delivery: "💵 Pay on Pickup",
       chefs: "👨‍🍳 +50 Chefs",
     },
   },
@@ -40,15 +40,15 @@ export const en = {
     steps: {
       browse: {
         title: "Browse Chefs & Menus",
-        description: "Discover trusted home chefs in your area and check today's menu.",
+        description: "Discover trusted home chefs in your area and browse today's menu.",
       },
       order: {
-        title: "Order Your Favorite Homemade Food",
-        description: "Pick your favorite dishes, customize your order, and pay in two clicks.",
+        title: "Place Your Order",
+        description: "Pick your favorite dishes and confirm your order - no online payment needed.",
       },
       receive: {
-        title: "Fast Delivery to Your Door",
-        description: "Freshly prepared for your order and delivered hot, straight from a home kitchen.",
+        title: "Pick Up & Pay the Chef",
+        description: "Collect your fresh meal from the chef and pay them in person when you receive it.",
       },
     },
   },
@@ -172,6 +172,7 @@ export const en = {
       emailRequired: "Email parameter is required",
       invalidEmail: "Invalid email address formatting",
       phoneNumber: "Phone Number",
+      phoneInvalid: "Phone number must be exactly 10 digits.",
       notProvided: "Not provided",
       location: "Location",
       locationPlaceholder: "Your location",
@@ -209,6 +210,7 @@ export const en = {
       phone: "Phone",
       phonePlaceholder: "Your phone number",
       phoneRequired: "Phone number is required",
+      phoneInvalid: "Phone number must be exactly 10 digits.",
       location: "Location",
       locationPlaceholder: "Your location",
       locationRequired: "Location is required",

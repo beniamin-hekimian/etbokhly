@@ -32,6 +32,7 @@ export default function BecomeChefPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -257,10 +258,17 @@ export default function BecomeChefPage() {
               <Input
                 {...register("phone", {
                   required: t?.profile?.becomeChef?.phoneRequired,
+                  pattern: {
+                    value: /^\d{10}$/,
+                    message: t?.profile?.becomeChef?.phoneInvalid,
+                  },
                 })}
                 id="phone"
-                type="text"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
                 autoComplete="tel"
+                onChange={(e) => setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
                 placeholder={t?.profile?.becomeChef?.phonePlaceholder}
                 disabled={isPending || isSubmitting}
               />

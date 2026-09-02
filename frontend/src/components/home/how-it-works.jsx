@@ -1,4 +1,4 @@
-import { Search, ShoppingBag, Bike } from "lucide-react";
+import { Search, ShoppingBag, HandCoins } from "lucide-react";
 import { useRouter } from "next/router";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Reveal } from "@/components/reveal";
@@ -22,7 +22,7 @@ export function HowItWorks() {
     },
     {
       number: locale === "ar" ? "٣" : "3",
-      icon: Bike,
+      icon: HandCoins,
       title: t.howItWorks.steps.receive.title,
       description: t.howItWorks.steps.receive.description,
     },

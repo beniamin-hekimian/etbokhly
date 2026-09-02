@@ -29,7 +29,7 @@ export const ar = {
     },
     chips: {
       rating: "⭐ تقييم ٤.٩",
-      delivery: "🛵 توصيل خلال ٢٥ د",
+      delivery: "💵 ادفع عند الاستلام",
       chefs: "👨‍🍳 +٥٠ طباخ",
     },
   },
@@ -40,15 +40,15 @@ export const ar = {
     steps: {
       browse: {
         title: "تصفّح الطباخين والقوائم",
-        description: "إظهار الطباخين الموثوقين بمنطقتك واكتشف قائمة وجبات اليوم.",
+        description: "اكتشف الطباخين الموثوقين في منطقتك وتصفّح قائمة اليوم.",
       },
       order: {
-        title: "اطلب طعامك المنزلي المفضل",
-        description: "اختر وجباتك المفضلة، خصّص طلبك، وأكمل الدفع بخطوات قليلة فقط.",
+        title: "قدّم طلبك",
+        description: "اختر أطباقك المفضلة وأكّد طلبك - لا حاجة للدفع عبر الإنترنت.",
       },
       receive: {
-        title: "استلم طلبك بتوصيل سريع",
-        description: "وجبتك تُحضّر خصيصاً لطلبك وتوصلك ساخنة، من المطبخ إلى باب منزلك.",
+        title: "استلم طلبك وادفع للطباخ",
+        description: "استلم وجبتك الطازجة من الطباخ وادفع له شخصياً عند الاستلام.",
       },
     },
   },
@@ -172,6 +172,7 @@ export const ar = {
       emailRequired: "البريد الإلكتروني مطلوب",
       invalidEmail: "صيغة البريد الإلكتروني غير صحيحة",
       phoneNumber: "رقم الهاتف",
+      phoneInvalid: "يجب أن يتكون رقم الهاتف من 10 أرقام.",
       notProvided: "غير محدد",
       location: "الموقع",
       locationPlaceholder: "موقعك",
@@ -209,6 +210,7 @@ export const ar = {
       phone: "رقم الهاتف",
       phonePlaceholder: "رقم هاتفك",
       phoneRequired: "رقم الهاتف مطلوب",
+      phoneInvalid: "يجب أن يتكون رقم الهاتف من 10 أرقام.",
       location: "الموقع",
       locationPlaceholder: "موقعك",
       locationRequired: "الموقع مطلوب",

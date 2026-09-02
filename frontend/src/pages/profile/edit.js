@@ -37,6 +37,7 @@ export default function EditProfilePage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -290,7 +291,22 @@ export default function EditProfilePage() {
                     {t?.profile?.edit?.phoneNumber}
                   </Label>
 
-                  <Input {...register("phone")} id="phone" type="tel" placeholder={t?.profile?.edit?.notProvided} />
+                  <Input
+                    {...register("phone", {
+                      pattern: {
+                        value: /^\d{10}$/,
+                        message: t?.profile?.edit?.phoneInvalid,
+                      },
+                    })}
+                    id="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    onChange={(e) => setValue("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder={t?.profile?.edit?.notProvided}
+                  />
+
+                  {errors.phone && <p className="text-xs font-medium text-destructive">{errors.phone.message}</p>}
                 </div>
 
                 <div className="space-y-2">
